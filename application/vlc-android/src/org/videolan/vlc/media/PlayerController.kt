@@ -138,6 +138,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun setPosition(position: Float) {
         if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) {
             mediaplayer.position = position
+            danmaEngine.seekTo((position * getLength()).toLong())
         }
     }
 
