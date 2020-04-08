@@ -70,9 +70,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.google.android.material.textfield.TextInputLayout
+import com.seiko.danma.IDanmakuEngine
+import com.seiko.danma.SimpleDrawHandlerCallback
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import master.flame.danmaku.ui.widget.DanmakuView
 import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.RendererItem
 import org.videolan.libvlc.interfaces.IMedia
@@ -118,6 +121,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
     var service: PlaybackService? = null
     private lateinit var medialibrary: Medialibrary
     private var videoLayout: VLCVideoLayout? = null
+    private var danmukuLayout: DanmakuView? = null
     lateinit var displayManager: DisplayManager
     private var rootView: View? = null
     private var videoUri: Uri? = null
@@ -433,6 +437,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                 settings.getString(SCREEN_ORIENTATION, "99" /*SCREEN ORIENTATION SENSOR*/)!!)
 
         videoLayout = findViewById(R.id.video_layout)
+        danmukuLayout = findViewById(R.id.danmaku_layout)
 
         /* Loading view */
         loadingImageView = findViewById(R.id.player_overlay_loading)
@@ -779,6 +784,15 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                 mediaPlayer.attachViews(it, displayManager, true, false)
                 val size = if (isBenchmark) MediaPlayer.ScaleType.SURFACE_FILL else MediaPlayer.ScaleType.values()[settings.getInt(VIDEO_RATIO, MediaPlayer.ScaleType.SURFACE_BEST_FIT.ordinal)]
                 mediaPlayer.videoScale = size
+            }
+
+            danmukuLayout?.let {
+                danmakuEngine.bindDanmakuView(it)
+                danmakuEngine.setCallback(object : SimpleDrawHandlerCallback() {
+                    override fun prepared() {
+                        danmakuEngine.seekTo(time)
+                    }
+                })
             }
 
             initUI()

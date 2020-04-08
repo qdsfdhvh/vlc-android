@@ -198,6 +198,10 @@ dependencies {
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.ext.kotlinx_version"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ext.kotlinx_version"
 
+    // 弹幕
+    implementation project(':libs:tool-danma')
+    implementation(Deps.arouter_api)
+
     // Tests
     androidTestApi "androidx.test.espresso:espresso-contrib:$rootProject.espressoVersion"
     androidTestApi "androidx.test.espresso:espresso-core:$rootProject.espressoVersion"

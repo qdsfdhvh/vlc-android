@@ -50,6 +50,8 @@ import androidx.lifecycle.ServiceLifecycleDispatcher
 import androidx.lifecycle.lifecycleScope
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
+import com.seiko.danma.DanmakuEngine
+import com.seiko.danma.IDanmakuEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
@@ -66,6 +68,7 @@ import org.videolan.medialibrary.interfaces.Medialibrary
 import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.resources.*
 import org.videolan.tools.*
+import org.videolan.vlc.danma.DanmaOptions
 import org.videolan.vlc.gui.helpers.AudioUtil
 import org.videolan.vlc.gui.helpers.BitmapUtil
 import org.videolan.vlc.gui.helpers.NotificationHelper
@@ -92,8 +95,13 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
 
     lateinit var playlistManager: PlaylistManager
         private set
+
     val mediaplayer: MediaPlayer
         get() = playlistManager.player.mediaplayer
+
+    val danmakuEngine: IDanmakuEngine
+        get() = playlistManager.player.danmaEngine
+
     private lateinit var keyguardManager: KeyguardManager
     internal lateinit var settings: SharedPreferences
     private val binder = LocalBinder()
@@ -464,6 +472,7 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
         NotificationHelper.createNotificationChannels(applicationContext)
         settings = Settings.getInstance(this)
         playlistManager = PlaylistManager(this)
+
         Util.checkCpuCompatibility(this)
 
         medialibrary = Medialibrary.getInstance()

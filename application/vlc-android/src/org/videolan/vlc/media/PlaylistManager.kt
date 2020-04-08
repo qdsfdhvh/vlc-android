@@ -9,6 +9,8 @@ import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.seiko.danma.DanmakuEngine
+import com.seiko.danma.IDanmakuEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.actor
@@ -26,6 +28,8 @@ import org.videolan.tools.*
 import org.videolan.vlc.BuildConfig
 import org.videolan.vlc.PlaybackService
 import org.videolan.vlc.R
+import org.videolan.vlc.danma.DanmaOptions
+import org.videolan.vlc.danma.DanmaService
 import org.videolan.vlc.gui.video.VideoPlayerActivity
 import org.videolan.vlc.util.*
 import org.videolan.vlc.util.FileUtils
@@ -48,7 +52,11 @@ class PlaylistManager(val service: PlaybackService) : MediaWrapperList.EventList
     }
 
     private val medialibrary by lazy(LazyThreadSafetyMode.NONE) { Medialibrary.getInstance() }
-    val player by lazy(LazyThreadSafetyMode.NONE) { PlayerController(service.applicationContext) }
+
+    val player by lazy(LazyThreadSafetyMode.NONE) {
+        PlayerController(service.applicationContext)
+    }
+
     private val settings by lazy(LazyThreadSafetyMode.NONE) { Settings.getInstance(service) }
     private val ctx by lazy(LazyThreadSafetyMode.NONE) { service.applicationContext }
     var currentIndex = -1
@@ -85,6 +93,7 @@ class PlaylistManager(val service: PlaybackService) : MediaWrapperList.EventList
     fun isValidPosition(position: Int) = position in 0 until mediaList.size()
 
     init {
+
         repeating = settings.getInt(PLAYLIST_REPEAT_MODE_KEY, PlaybackStateCompat.REPEAT_MODE_NONE)
     }
 
@@ -190,7 +199,9 @@ class PlaylistManager(val service: PlaybackService) : MediaWrapperList.EventList
     }
 
     fun play() {
-        if (hasMedia()) player.play()
+        if (hasMedia()) {
+            player.play()
+        }
     }
 
     fun pause() {
@@ -330,6 +341,7 @@ class PlaylistManager(val service: PlaybackService) : MediaWrapperList.EventList
             }
             media.setEventListener(this@PlaylistManager)
             player.startPlayback(media, mediaplayerEventListener, start)
+
             player.setSlaves(media, mw)
             newMedia = true
             determinePrevAndNextIndices()

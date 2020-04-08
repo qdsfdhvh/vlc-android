@@ -6,6 +6,8 @@ import android.support.v4.media.session.PlaybackStateCompat
 import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.lifecycle.MutableLiveData
+import com.seiko.danma.DanmakuEngine
+import com.seiko.danma.IDanmakuEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.actor
@@ -22,6 +24,8 @@ import org.videolan.tools.Settings
 import org.videolan.tools.putSingle
 import org.videolan.vlc.BuildConfig
 import org.videolan.vlc.PlaybackService
+import org.videolan.vlc.danma.DanmaOptions
+import org.videolan.vlc.danma.DanmaService
 import org.videolan.vlc.repository.SlaveRepository
 import kotlin.math.abs
 
@@ -37,8 +41,13 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     val progress by lazy(LazyThreadSafetyMode.NONE) { MutableLiveData<Progress>().apply { value = Progress() } }
     private val slaveRepository by lazy { SlaveRepository.getInstance(context) }
 
+    val danmaEngine: IDanmakuEngine by lazy(LazyThreadSafetyMode.NONE) {
+        DanmakuEngine(DanmaOptions.createOptions())
+    }
+
     var mediaplayer = newMediaPlayer()
         private set
+
     var switchToVideo = false
     var seekable = false
     var pausable = false
@@ -54,19 +63,25 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun getMedia(): IMedia? = mediaplayer.media
 
     fun play() {
-        if (mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.play()
+        if (mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.play()
+            danmaEngine.play()
+        }
     }
 
     fun pause(): Boolean {
         if (isPlaying() && mediaplayer.hasMedia() && pausable) {
             mediaplayer.pause()
+            danmaEngine.pause()
             return true
         }
         return false
     }
 
     fun stop() {
-        if (mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.stop()
+        if (mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.stop()
+        }
         setPlaybackStopped()
     }
 
@@ -87,6 +102,14 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
             mediaplayer.setVideoTitleDisplay(MediaPlayer.Position.Disable, 0)
             mediaplayer.play()
         }
+
+        // 加载弹幕
+        withContext(Dispatchers.IO) {
+            val data = DanmaService.get()?.getDanmaResult(media)
+            if (data != null) {
+                danmaEngine.setDanmaList(data.comments, data.shift)
+            }
+        }
     }
 
     private fun resetPlaybackState(time: Long, duration: Long) {
@@ -104,16 +127,25 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     }
 
     fun seek(position: Long, length: Double = getLength().toDouble()) {
-        if (length > 0.0) setPosition((position / length).toFloat())
-        else setTime(position)
+        if (length > 0.0) {
+            setPosition((position / length).toFloat())
+        }
+        else {
+            setTime(position)
+        }
     }
 
     fun setPosition(position: Float) {
-        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.position = position
+        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.position = position
+        }
     }
 
     fun setTime(time: Long) {
-        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.time = time
+        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.time = time
+            danmaEngine.seekTo(time)
+        }
     }
 
     fun isPlaying() = playbackState == PlaybackStateCompat.STATE_PLAYING
@@ -183,6 +215,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     }
 
     fun release(player: MediaPlayer = mediaplayer) {
+        danmaEngine.release()
         player.setEventListener(null)
         if (isVideoPlaying()) player.vlcVout.detachViews()
         releaseMedia()
