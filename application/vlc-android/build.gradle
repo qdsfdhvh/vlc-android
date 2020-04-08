@@ -156,19 +156,19 @@ task buildTranslationArray {
 preBuild.dependsOn buildTranslationArray
 
 dependencies {
-    devApi project(':libvlc')
-    devApi project(':medialibrary')
+    devApi project(':libs:tool-vlc:libvlc')
+    devApi project(':libs:tool-vlc:medialibrary')
     debugApi "org.videolan.android:libvlc-all:$rootProject.ext.libvlcVersion"
     debugApi "org.videolan.android:medialibrary-all:$rootProject.ext.medialibraryVersion"
     releaseApi "org.videolan.android:libvlc-all:$rootProject.ext.libvlcVersion"
     releaseApi "org.videolan.android:medialibrary-all:$rootProject.ext.medialibraryVersion"
     signedReleaseApi "org.videolan.android:libvlc-all:$rootProject.ext.libvlcVersion"
     signedReleaseApi "org.videolan.android:medialibrary-all:$rootProject.ext.medialibraryVersion"
-    api project(':extension-api')
-    api project(':application:tools')
-    api project(':application:resources')
-    api project(':application:mediadb')
-    api project(':application:live-plot-graph')
+    api project(':libs:tool-vlc:extension-api')
+    api project(':libs:tool-vlc:application:tools')
+    api project(':libs:tool-vlc:application:resources')
+    api project(':libs:tool-vlc:application:mediadb')
+    api project(':libs:tool-vlc:application:live-plot-graph')
 
     // AppCompat
     api "androidx.activity:activity-ktx:$rootProject.ext.androidxActivityVersion"

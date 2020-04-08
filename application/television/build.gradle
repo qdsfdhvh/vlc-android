@@ -43,6 +43,6 @@ android {
 }
 
 dependencies {
-    implementation project(':application:vlc-android')
-    api project(':application:moviepedia')
+    implementation project(':libs:tool-vlc:application:vlc-android')
+    api project(':libs:tool-vlc:application:moviepedia')
 }
