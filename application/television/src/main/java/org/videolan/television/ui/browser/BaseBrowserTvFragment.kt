@@ -425,6 +425,5 @@ fun constraintRatio(v: View, isSquare: Boolean) {
         constraintSet.clone(constraintLayout)
         constraintSet.setDimensionRatio(v.id, if (isSquare) "1" else "16:10")
         constraintLayout.setConstraintSet(constraintSet)
-
     }
 }
