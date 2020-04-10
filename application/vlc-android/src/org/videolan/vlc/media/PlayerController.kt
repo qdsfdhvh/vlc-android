@@ -265,6 +265,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun setRate(rate: Float, save: Boolean) {
         if (mediaplayer.isReleased) return
         mediaplayer.rate = rate
+        danmaEngine.setRate(rate)
         if (save && settings.getBoolean(KEY_PLAYBACK_SPEED_PERSIST, false))
             settings.putSingle(KEY_PLAYBACK_RATE, rate)
     }

@@ -16,7 +16,7 @@ import org.videolan.tools.Settings.init
 object Settings : SingletonHolder<SharedPreferences, Context>({ init(it) }) {
 
     var showVideoThumbs = true
-    var tvUI = false
+    var tvUI = true
     var listTitleEllipsize = 0
     var overrideTvUI = false
     lateinit var device : DeviceInfo
@@ -25,7 +25,7 @@ object Settings : SingletonHolder<SharedPreferences, Context>({ init(it) }) {
     fun init(context: Context) : SharedPreferences{
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         showVideoThumbs = prefs.getBoolean(SHOW_VIDEO_THUMBNAILS, true)
-        tvUI = prefs.getBoolean(PREF_TV_UI, false)
+        tvUI = prefs.getBoolean(PREF_TV_UI, true)
         listTitleEllipsize = prefs.getString(LIST_TITLE_ELLIPSIZE, "0")?.toInt() ?: 0
         device = DeviceInfo(context)
         return prefs
