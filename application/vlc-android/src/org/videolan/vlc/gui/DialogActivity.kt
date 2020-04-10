@@ -51,7 +51,11 @@ class DialogActivity : BaseActivity() {
             KEY_DEVICE -> setupDeviceDialog()
             KEY_DIALOG -> {
                 dialog?.run {
-                    showVlcDialog(this)
+                    val fragment = showVlcDialog(this)
+                    if (fragment is VlcLoginDialog) {
+                        fragment.setMrl(mrl)
+                    }
+                    mrl = null
                     dialog = null
                 } ?: finish()
             }
@@ -84,6 +88,7 @@ class DialogActivity : BaseActivity() {
     companion object {
 
         var dialog : Dialog? = null
+        var mrl: String? = null
         const val KEY_SERVER = "serverDialog"
         const val KEY_SUBS_DL = "subsdlDialog"
         const val KEY_DEVICE = "deviceDialog"

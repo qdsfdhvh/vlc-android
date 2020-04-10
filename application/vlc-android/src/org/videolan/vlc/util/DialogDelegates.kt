@@ -67,12 +67,12 @@ class DialogDelegate : IDialogDelegate {
     }
 }
 
-fun Fragment.showVlcDialog(dialog: Dialog) {
-    activity?.showVlcDialog(dialog)
+fun Fragment.showVlcDialog(dialog: Dialog): DialogFragment? {
+    return activity?.showVlcDialog(dialog)
 }
 
 @Suppress("INACCESSIBLE_TYPE")
-fun FragmentActivity.showVlcDialog(dialog: Dialog) {
+fun FragmentActivity.showVlcDialog(dialog: Dialog): DialogFragment? {
     val dialogFragment = when (dialog) {
         is Dialog.LoginDialog -> VlcLoginDialog().apply {
             vlcDialog = dialog
@@ -84,9 +84,11 @@ fun FragmentActivity.showVlcDialog(dialog: Dialog) {
             vlcDialog = dialog
         }
         else -> null
-    } ?: return
+    } ?: return null
+
     val fm = supportFragmentManager
     dialogFragment.show(fm, "vlc_dialog_${++DialogDelegate.dialogCounter}")
+    return dialogFragment
 }
 
 private sealed class DialogEvt

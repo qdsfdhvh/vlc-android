@@ -20,4 +20,5 @@ interface DanmaService : IProvider {
 
     suspend fun getDanmaResult(media: IMedia): DanmaResultBean?
 
+    suspend fun saveSmbServer(mrl: String, account: String, password: String)
 }

@@ -67,3 +67,7 @@ libvlc.pc
 libvlc.pc.backup
 libvlcpp.pc
 lib/
+
+.project
+.settings/
+.classpath

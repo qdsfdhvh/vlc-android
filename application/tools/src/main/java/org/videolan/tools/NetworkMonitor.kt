@@ -48,7 +48,11 @@ class NetworkMonitor(private val context: Context) : LifecycleObserver {
     fun stop() {
         if (!registered) return
         registered = false
-        context.unregisterReceiver(receiver)
+
+        try {
+            context.unregisterReceiver(receiver)
+        } catch (ignored: Exception) {
+        }
     }
 
     protected fun finalize() {

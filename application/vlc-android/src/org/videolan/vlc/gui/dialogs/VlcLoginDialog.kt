@@ -29,6 +29,9 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.videolan.libvlc.Dialog
 import org.videolan.vlc.R
 import org.videolan.vlc.databinding.VlcLoginDialogBinding
@@ -37,12 +40,15 @@ import org.videolan.resources.AndroidDevices
 import org.videolan.tools.LOGIN_STORE
 import org.videolan.tools.Settings
 import org.videolan.tools.putSingle
+import org.videolan.vlc.danma.DanmaService
 
 class VlcLoginDialog : VlcDialog<Dialog.LoginDialog, VlcLoginDialogBinding>(), View.OnFocusChangeListener {
 
     private lateinit var settings: SharedPreferences
 
     override val layout= R.layout.vlc_login_dialog
+
+    private var mrl: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -59,10 +65,24 @@ class VlcLoginDialog : VlcDialog<Dialog.LoginDialog, VlcLoginDialogBinding>(), V
     }
 
     fun onLogin(v: View) {
-        vlcDialog.postLogin(binding.login.text.toString().trim(),
-                binding.password.text.toString().trim(), binding.store.isChecked)
+        val account = binding.login.text.toString().trim()
+        val password = binding.password.text.toString().trim()
+        val store = binding.store.isChecked
+        vlcDialog.postLogin(account, password, store)
+
         settings.putSingle(LOGIN_STORE, binding.store.isChecked)
+
+        if (store && !mrl.isNullOrEmpty()) {
+            GlobalScope.launch(Dispatchers.IO) {
+                DanmaService.get()?.saveSmbServer(mrl!!, account, password)
+            }
+        }
+
         dismiss()
+    }
+
+    fun setMrl(mrl: String?) {
+        this.mrl = mrl
     }
 
     fun store() = settings.getBoolean(LOGIN_STORE, true)

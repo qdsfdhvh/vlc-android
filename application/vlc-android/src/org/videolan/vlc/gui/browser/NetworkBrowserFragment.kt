@@ -28,7 +28,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
-import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
@@ -42,6 +41,7 @@ import org.videolan.tools.isStarted
 import org.videolan.vlc.ExternalMonitor
 import org.videolan.vlc.R
 import org.videolan.vlc.gui.dialogs.NetworkServerDialog
+import org.videolan.vlc.gui.dialogs.VlcLoginDialog
 import org.videolan.vlc.gui.view.EmptyLoadingState
 import org.videolan.vlc.util.*
 import org.videolan.vlc.viewmodels.browser.NetworkModel
@@ -104,7 +104,10 @@ class NetworkBrowserFragment : BaseBrowserFragment(), IDialogManager {
     }
 
     override fun fireDialog(dialog: Dialog) {
-        showVlcDialog(dialog)
+        val fragment = showVlcDialog(dialog)
+        if (fragment is VlcLoginDialog) {
+            fragment.setMrl(mrl)
+        }
     }
 
     override fun dialogCanceled(dialog: Dialog?) {

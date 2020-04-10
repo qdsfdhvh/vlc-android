@@ -20,6 +20,7 @@ import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.tools.AppScope
 import org.videolan.tools.runIO
 import org.videolan.vlc.R
+import org.videolan.vlc.danma.DanmaService
 import org.videolan.vlc.gui.DialogActivity
 import org.videolan.vlc.gui.MainActivity
 import org.videolan.vlc.repository.BrowserFavRepository
@@ -128,6 +129,9 @@ class NetworkServerDialog : DialogFragment(), AdapterView.OnItemSelectedListener
         AppScope.launch {
             if (::networkUri.isInitialized) browserFavRepository.deleteBrowserFav(networkUri)
             browserFavRepository.addNetworkFavItem(uri, name, null)
+
+//            DanmaService.get()?.getDanmaResult()
+
             dismiss()
         }
     }

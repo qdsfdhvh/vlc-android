@@ -23,7 +23,6 @@ package org.videolan.television.ui.browser
 import android.annotation.TargetApi
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -97,7 +96,6 @@ class VerticalGridActivity : BaseTvActivity(), BrowserActivityInterface {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        Log.d("VerticalGridActivity", "keyCode= $keyCode")
         if (::fragment.isInitialized) {
             if (fragment is DetailsFragment
                 && (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
