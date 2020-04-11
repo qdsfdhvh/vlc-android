@@ -505,6 +505,7 @@
             android:exported="true"
             android:finishOnTaskLaunch="true"
             android:launchMode="singleTask"
+            android:screenOrientation="landscape"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:theme="@style/Theme.VLC.Player"/>
