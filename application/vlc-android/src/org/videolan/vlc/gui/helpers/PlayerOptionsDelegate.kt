@@ -141,9 +141,9 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
                 if (flags and CTX_DOWNLOAD_SUBTITLES_PLAYER != 0) options.add(PlayerOption(playerOptionType, CTX_DOWNLOAD_SUBTITLES_PLAYER, R.drawable.ic_downsub_w, res.getString(R.string.download_subtitles)))
 
                 if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
-                    options.add(PlayerOption(playerOptionType, ID_DANMA_TRACK, R.drawable.ic_danma_open_w, res.getString(R.string.danma_open)))
+                    options.add(PlayerOption(playerOptionType, ID_DANMA_TRACK, R.drawable.ic_subtitle_w, res.getString(R.string.danma_open)))
                 } else {
-                    options.add(PlayerOption(playerOptionType, ID_DANMA_TRACK, R.drawable.ic_danma_close_w, res.getString(R.string.danma_close)))
+                    options.add(PlayerOption(playerOptionType, ID_DANMA_TRACK, R.drawable.ic_subtitle_w, res.getString(R.string.danma_close)))
                 }
             }
         }
@@ -390,10 +390,6 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
         }
     }
 
-    private fun initDanma(binding: PlayerOptionItemBinding) {
-        danmaBinding = binding
-    }
-
     private fun togglePassthrough() {
         val enabled = !VLCOptions.isAudioDigitalOutputEnabled(settings)
         if (service.setAudioDigitalOutputEnabled(enabled)) {
@@ -408,11 +404,11 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
 
     private fun setDanmaMode(show: Boolean) {
         if (show) {
-            danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_open_w)
+//            danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_open)
             danmaBinding.optionTitle.text = res.getString(R.string.danma_open)
             service.danmakuEngine.show()
         } else {
-            danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_close_w)
+//            danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_close)
             danmaBinding.optionTitle.text = res.getString(R.string.danma_close)
             service.danmakuEngine.hide()
         }
@@ -443,7 +439,7 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
                 option.id == ID_AUDIO_DELAY -> initAudioDelay(holder.binding)
                 option.id == ID_JUMP_TO -> initJumpTo(holder.binding)
                 option.id == ID_SPU_DELAY -> initSpuDelay(holder.binding)
-                option.id == ID_DANMA_TRACK -> initDanma(holder.binding)
+                option.id == ID_DANMA_TRACK -> danmaBinding = holder.binding
             }
             when (option.type) {
                 PlayerOptionType.ADVANCED -> holder.binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, option.icon))
