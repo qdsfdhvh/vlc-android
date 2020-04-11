@@ -7,7 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.Build
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
@@ -36,12 +38,35 @@ class NetworkMonitor(private val context: Context) : LifecycleObserver {
         ProcessLifecycleOwner.get().lifecycle.addObserver(this@NetworkMonitor)
     }
 
+    private var callback: ConnectivityManager.NetworkCallback? = null
+
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun start() {
         if (registered) return
         registered = true
-        val networkFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
-        context.registerReceiver(receiver, networkFilter)
+
+        // 从弹弹跳转过来无法接收CONNECTIVITY_ACTION，尚未找到原因，暂时使用新网络api。
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            @SuppressLint("MissingPermission")
+            callback = object: ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network) {
+                    super.onAvailable(network)
+
+                    val isConnected = true
+                    val isMobile =
+                        cm.getNetworkCapabilities(network)
+                            ?.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                            ?: false
+                    val isVPN =  updateVPNStatus()
+                    val conn = Connection(isConnected, isMobile, isVPN)
+                    if (connection.value != conn) connection.offer(conn)
+                }
+            }
+            cm.requestNetwork(NetworkRequest.Builder().build(), callback!!)
+        } else {
+            val networkFilter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+            context.registerReceiver(receiver, networkFilter)
+        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
@@ -49,9 +74,16 @@ class NetworkMonitor(private val context: Context) : LifecycleObserver {
         if (!registered) return
         registered = false
 
-        try {
-            context.unregisterReceiver(receiver)
-        } catch (ignored: Exception) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (callback != null) {
+                cm.unregisterNetworkCallback(callback!!)
+                callback = null
+            }
+        } else {
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (ignored: Exception) {
+            }
         }
     }
 

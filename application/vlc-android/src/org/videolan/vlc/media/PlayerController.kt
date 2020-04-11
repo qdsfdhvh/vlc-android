@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.lifecycle.MutableLiveData
 import com.seiko.danma.DanmakuEngine
+import com.seiko.danma.DanmakuEngineOptions
 import com.seiko.danma.IDanmakuEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -24,7 +25,6 @@ import org.videolan.tools.Settings
 import org.videolan.tools.putSingle
 import org.videolan.vlc.BuildConfig
 import org.videolan.vlc.PlaybackService
-import org.videolan.vlc.danma.DanmaOptions
 import org.videolan.vlc.danma.DanmaService
 import org.videolan.vlc.repository.SlaveRepository
 import kotlin.math.abs
@@ -42,7 +42,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     private val slaveRepository by lazy { SlaveRepository.getInstance(context) }
 
     val danmaEngine: IDanmakuEngine by lazy(LazyThreadSafetyMode.NONE) {
-        DanmakuEngine(DanmaOptions.createOptions())
+        DanmakuEngine(DanmaService.get()?.loadDanmaOptions() ?: DanmakuEngineOptions())
     }
 
     var mediaplayer = newMediaPlayer()
