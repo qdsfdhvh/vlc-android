@@ -181,6 +181,8 @@
     <string name="jump_to_time">转到时间</string>
     <string name="subtitle_label">添加字幕文件</string>
     <string name="subtitle_select">选择字幕文件</string>
+    <string name="danma_open">打开弹幕</string>
+    <string name="danma_close">关闭弹幕</string>
     <string name="no_file_picker_found">系统中未找到文件选择器。</string>
 
     <string name="server_add_title">向收藏夹添加新的服务器</string>

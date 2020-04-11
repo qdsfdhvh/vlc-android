@@ -192,6 +192,8 @@
     <string name="jump_to_time">Jump to Time</string>
     <string name="subtitle_label">Add subtitle file</string>
     <string name="subtitle_select">Select subtitle file</string>
+    <string name="danma_open">Open Danma</string>
+    <string name="danma_close">Close Danma</string>
     <string name="no_file_picker_found">No file picker was found on the system.</string>
 
     <string name="server_add_title">Add a new server to favorites</string>

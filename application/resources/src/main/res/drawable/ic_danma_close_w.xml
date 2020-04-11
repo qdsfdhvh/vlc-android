@@ -1,0 +1,93 @@
+<!--
+  ~ *************************************************************************
+  ~  ic_subtitle_open_normal_w.xml
+  ~ **************************************************************************
+  ~ Copyright © 2020 VLC authors and VideoLAN
+  ~ Author: Nicolas POMEPUY
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation; either version 2 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program; if not, write to the Free Software
+  ~ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+  ~ ***************************************************************************
+  ~
+  ~
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="45dp"
+    android:height="45dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M921.6 102.4H102.4C46.08 102.4 0 148.48 0 204.8v532.48c0 56.32 46.08 102.4 102.4 102.4h482.816c-11.264-15.872-20.992-32.768-28.16-51.2H102.4c-28.16 0-51.2-23.04-51.2-51.2V204.8c0-28.16 23.04-51.2 51.2-51.2h819.2c28.16 0 51.2 23.04 51.2 51.2v303.616c20.992 20.48 38.4 44.544 51.2 71.168V204.8c0-56.32-46.08-102.4-102.4-102.4z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M307.2 343.04m-25.6 0a25.6 25.6 0 1 0 51.2 0 25.6 25.6 0 1 0-51.2 0Z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M716.8 368.64c13.824 0 25.6-11.264 25.6-25.6s-11.264-25.6-25.6-25.6H409.6c-14.336 0-25.6 11.264-25.6 25.6s11.264 25.6 25.6 25.6h307.2z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M153.6 471.04m-25.6 0a25.6 25.6 0 1 0 51.2 0 25.6 25.6 0 1 0-51.2 0Z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M588.8 471.04c0-14.336-11.264-25.6-25.6-25.6H256c-14.336 0-25.6 11.264-25.6 25.6s11.264 25.6 25.6 25.6h307.2c14.336 0 25.6-11.264 25.6-25.6z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M384 599.04m-25.6 0a25.6 25.6 0 1 0 51.2 0 25.6 25.6 0 1 0-51.2 0Z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData=""
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M793.6 460.8c-83.968 0-157.696 45.056-198.144 112.64H486.4c-14.336 0-25.6 11.264-25.6 25.6s11.264 25.6 25.6 25.6h86.528c-6.144 20.992-9.728 43.52-9.728 66.56 0 126.976 103.424 230.4 230.4 230.4s230.4-103.424 230.4-230.4-103.424-230.4-230.4-230.4z m0 409.6c-98.816 0-179.2-80.384-179.2-179.2s80.384-179.2 179.2-179.2 179.2 80.384 179.2 179.2-80.384 179.2-179.2 179.2z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+    <path
+        android:fillAlpha="1"
+        android:fillColor="@color/standard_selection"
+        android:fillType="nonZero"
+        android:pathData="M793.6 460.8c-83.968 0-157.696 45.056-198.144 112.64H486.4c-14.336 0-25.6 11.264-25.6 25.6s11.264 25.6 25.6 25.6h86.528c-6.144 20.992-9.728 43.52-9.728 66.56 0 126.976 103.424 230.4 230.4 230.4s230.4-103.424 230.4-230.4-103.424-230.4-230.4-230.4z m0 409.6c-98.816 0-179.2-80.384-179.2-179.2 0-39.936 13.312-77.312 35.84-107.008l250.88 250.88c-30.208 22.016-67.072 35.328-107.52 35.328z m143.36-72.192l-250.88-250.88c29.696-22.528 67.072-35.84 107.008-35.84 98.816 0 179.2 80.384 179.2 179.2 0.512 40.96-12.8 77.824-35.328 107.52z"
+        android:strokeWidth="1"
+        android:strokeColor="#00000000" />
+</vector>

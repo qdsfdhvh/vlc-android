@@ -70,7 +70,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.google.android.material.textfield.TextInputLayout
-import com.seiko.danma.IDanmakuEngine
 import com.seiko.danma.SimpleDrawHandlerCallback
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
@@ -790,6 +789,8 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                 danmakuEngine.bindDanmakuView(it)
                 danmakuEngine.setCallback(object : SimpleDrawHandlerCallback() {
                     override fun prepared() {
+                        val show = settings.getBoolean(KEY_SETTING_DANMA, true)
+                        if (show) danmakuEngine.show() else danmakuEngine.hide()
                         danmakuEngine.seekTo(time)
                     }
                 })

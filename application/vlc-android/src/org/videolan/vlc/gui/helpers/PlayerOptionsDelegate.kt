@@ -28,6 +28,7 @@ import org.videolan.resources.*
 import org.videolan.tools.AppScope
 import org.videolan.tools.Settings
 import org.videolan.tools.formatRateString
+import org.videolan.tools.putSingle
 import org.videolan.vlc.PlaybackService
 import org.videolan.vlc.R
 import org.videolan.vlc.databinding.PlayerOptionItemBinding
@@ -59,6 +60,9 @@ private const val ID_ABREPEAT = 13
 private const val ID_OVERLAY_SIZE = 14
 private const val ID_VIDEO_STATS = 15
 
+private const val ID_DANMA_TRACK = 100
+const val KEY_SETTING_DANMA = "danma"
+
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @SuppressLint("ShowToast")
@@ -79,6 +83,7 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
     private lateinit var repeatBinding: PlayerOptionItemBinding
     private lateinit var shuffleBinding: PlayerOptionItemBinding
     private lateinit var sleepBinding: PlayerOptionItemBinding
+    private lateinit var danmaBinding: PlayerOptionItemBinding
 
     private val abrObs = Observer<Boolean> { abr ->
         if (abr == null || !this::abrBinding.isInitialized) return@Observer
@@ -134,6 +139,12 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
                 }
                 if (flags and CTX_PICK_SUBS != 0) options.add(PlayerOption(playerOptionType, CTX_PICK_SUBS, R.drawable.ic_subtitle_open_w, res.getString(R.string.subtitle_select)))
                 if (flags and CTX_DOWNLOAD_SUBTITLES_PLAYER != 0) options.add(PlayerOption(playerOptionType, CTX_DOWNLOAD_SUBTITLES_PLAYER, R.drawable.ic_downsub_w, res.getString(R.string.download_subtitles)))
+
+                if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
+                    options.add(PlayerOption(playerOptionType, ID_DANMA_TRACK, R.drawable.ic_danma_open_w, res.getString(R.string.danma_open)))
+                } else {
+                    options.add(PlayerOption(playerOptionType, ID_DANMA_TRACK, R.drawable.ic_danma_close_w, res.getString(R.string.danma_close)))
+                }
             }
         }
         (recyclerview.adapter as OptionsAdapter).update(options)
@@ -212,6 +223,12 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
                         CTX_AUDIO_TRACK -> selectAudioTrack()
                         CTX_SUBS_TRACK -> selectSubtitles()
                         CTX_PICK_SUBS -> pickSubtitles()
+                        ID_DANMA_TRACK -> {
+                            val show = !settings.getBoolean(KEY_SETTING_DANMA, true)
+                            settings.putSingle(KEY_SETTING_DANMA, show)
+                            setDanmaMode(show)
+                            return
+                        }
                         CTX_DOWNLOAD_SUBTITLES_PLAYER -> downloadSubtitles()
                         else -> Unit
                     }
@@ -373,6 +390,10 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
         }
     }
 
+    private fun initDanma(binding: PlayerOptionItemBinding) {
+        danmaBinding = binding
+    }
+
     private fun togglePassthrough() {
         val enabled = !VLCOptions.isAudioDigitalOutputEnabled(settings)
         if (service.setAudioDigitalOutputEnabled(enabled)) {
@@ -383,6 +404,18 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
         } else
             toast.setText(R.string.audio_digital_failed)
         toast.show()
+    }
+
+    private fun setDanmaMode(show: Boolean) {
+        if (show) {
+            danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_open_w)
+            danmaBinding.optionTitle.text = res.getString(R.string.danma_open)
+            service.danmakuEngine.show()
+        } else {
+            danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_close_w)
+            danmaBinding.optionTitle.text = res.getString(R.string.danma_close)
+            service.danmakuEngine.hide()
+        }
     }
 
     fun isShowing() = rootView.visibility == View.VISIBLE
@@ -410,6 +443,7 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
                 option.id == ID_AUDIO_DELAY -> initAudioDelay(holder.binding)
                 option.id == ID_JUMP_TO -> initJumpTo(holder.binding)
                 option.id == ID_SPU_DELAY -> initSpuDelay(holder.binding)
+                option.id == ID_DANMA_TRACK -> initDanma(holder.binding)
             }
             when (option.type) {
                 PlayerOptionType.ADVANCED -> holder.binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, option.icon))
