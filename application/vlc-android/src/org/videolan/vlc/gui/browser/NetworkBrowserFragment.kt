@@ -29,7 +29,6 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -38,8 +37,8 @@ import org.videolan.libvlc.Dialog
 import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.resources.CTX_FAV_ADD
 import org.videolan.tools.NetworkMonitor
-import org.videolan.tools.isStarted
 import org.videolan.vlc.R
+import org.videolan.vlc.gui.dialogs.VlcLoginDialog
 import org.videolan.vlc.gui.view.EmptyLoadingState
 import org.videolan.vlc.util.DialogDelegate
 import org.videolan.vlc.util.IDialogManager

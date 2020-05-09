@@ -22,7 +22,7 @@
  */
 
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
+//apply plugin: 'com.github.dcendents.android-maven'
 
 ext {
     library_version = '0.1'
@@ -55,4 +55,4 @@ dependencies {
     testImplementation "junit:junit:$rootProject.ext.junitVersion"
 }
 
-apply from: '../buildsystem/publish.gradle'
+//apply from: '../buildsystem/publish.gradle'

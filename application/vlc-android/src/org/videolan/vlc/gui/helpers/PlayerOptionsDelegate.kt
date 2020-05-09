@@ -60,7 +60,7 @@ private const val ID_ABREPEAT = 13L
 private const val ID_OVERLAY_SIZE = 14L
 private const val ID_VIDEO_STATS = 15L
 
-private const val ID_DANMA_TRACK = 100
+private const val ID_DANMA_TRACK = 100L
 const val KEY_SETTING_DANMA = "danma"
 
 @ObsoleteCoroutinesApi
