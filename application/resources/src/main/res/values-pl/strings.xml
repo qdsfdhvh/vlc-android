@@ -232,7 +232,7 @@
     <string name="favorite_removed">Usunięto z ulubionych</string>
 
     <string name="open">Otwórz</string>
-    <string name="open_mrl">Strumieniowanie</string>
+    <string name="streams">Strumienie</string>
     <string name="open_mrl_dialog_title">Otwórz strumień sieciowy</string>
     <string name="open_mrl_dialog_msg">Podaj adres sieciowy: np. http://, mms:// lub rtsp://</string>
     <string name="error_not_compatible">Przykro nam, ale twoje urządzenie nie jest obecnie obsługiwane przez tę wersję VLC dla Androida™.</string>
@@ -719,8 +719,18 @@
     <string name="preamp">Przedwzmacniacz</string>
     <string name="presets">Domyślne</string>
     <string name="reset">Resetuj</string>
-    <string name="appended">Utwory dołączone</string>
-    <string name="inserted">Utwory wstawione</string>
+    <plurals name="tracks_inserted">
+        <item quantity="one">Wstawiono %d utwór</item>
+        <item quantity="few">Wstawiono %d utworów</item>
+        <item quantity="many">Wstawiono %d utwory</item>
+        <item quantity="other">Wstawiono %d utworów</item>
+    </plurals>
+    <plurals name="tracks_appended">
+        <item quantity="one">Dołączono %d utwór</item>
+        <item quantity="few">Dołączono %d utworów</item>
+        <item quantity="many">Dołączono %d utwory</item>
+        <item quantity="other">Dołączono %d utworów</item>
+    </plurals>
     <string name="remove_current">Usuń obecne</string>
     <string name="validation_delete_playlist">Czy na pewno chcesz usunąć tą listę odtwarzania?</string>
     <string name="validation_delete_playlist_text">Ta akcja nie może zostać cofnięta.</string>
@@ -813,4 +823,8 @@
     <string name="all_subfolders">Dodaj ten folder z podfolderami</string>
     <string name="playlist_existing">Lista odtwarzania %s już istnieje</string>
     <string name="new_title">Nowy tytuł</string>
+    <string name="browse">Przeglądaj</string>
+    <string name="more">Więcej</string>
+    <string name="favorites">Ulubione</string>
+    <string name="new_stream">Nowy strumień</string>
 </resources>

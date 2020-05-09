@@ -75,7 +75,9 @@ import org.videolan.tools.isStarted
 import org.videolan.vlc.MediaParsingService
 import org.videolan.vlc.R
 import org.videolan.vlc.gui.BaseActivity
+import org.videolan.vlc.gui.InfoActivity
 import org.videolan.vlc.gui.browser.MediaBrowserFragment
+import org.videolan.vlc.gui.dialogs.AddToGroupDialog
 import org.videolan.vlc.gui.dialogs.SavePlaylistDialog
 import org.videolan.vlc.media.MediaUtils
 import org.videolan.vlc.providers.medialibrary.MedialibraryProvider
@@ -219,6 +221,7 @@ object UiTools {
             snack.view.elevation = view.resources.getDimensionPixelSize(R.dimen.audio_player_elevation).toFloat()
         snack.show()
     }
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     fun CoroutineScope.snackerConfirm(view: View, message: String, action: suspend() -> Unit) {
         val snack = Snackbar.make(view, message, Snackbar.LENGTH_LONG)
@@ -339,6 +342,20 @@ object UiTools {
         savePlaylistDialog.show(supportFragmentManager, "fragment_add_to_playlist")
     }
 
+    fun FragmentActivity.addToGroup(tracks: List<MediaWrapper>) {
+        if (!isStarted()) return
+        val addToGroupDialog = AddToGroupDialog()
+        val args = Bundle()
+        args.putParcelableArray(AddToGroupDialog.KEY_TRACKS, tracks.toTypedArray())
+        addToGroupDialog.arguments = args
+        addToGroupDialog.show(supportFragmentManager, "fragment_add_to_playlist")
+    }
+
+    fun FragmentActivity.showMediaInfo(mediaWrapper: MediaWrapper) {
+        val i = Intent(this, InfoActivity::class.java)
+        i.putExtra(TAG_ITEM, mediaWrapper)
+        startActivity(i)
+    }
 
     fun getDefaultCover(context: Context, item: MediaLibraryItem): BitmapDrawable {
         return when (item.itemType) {
@@ -367,7 +384,7 @@ object UiTools {
 
 
             //Create the Allocations (in/out) with the Renderscript and the in/out bitmaps
-            val allIn = Allocation.createFromBitmap(rs, bitmap)
+            val allIn = Allocation.createFromBitmap(rs, if (bitmap.config == Bitmap.Config.ARGB_8888) bitmap else bitmap.copy(Bitmap.Config.ARGB_8888, true))
             val allOut = Allocation.createFromBitmap(rs, outBitmap)
 
             //Set the radius of the blur
@@ -394,19 +411,19 @@ object UiTools {
         val sort = provider.sort
         val desc = provider.desc
         var item: MenuItem? = menu.findItem(R.id.ml_menu_sortby_name)
-        item?.setTitle(if (sort == Medialibrary.SORT_ALPHA && !desc) R.string.sortby_name_desc else R.string.sortby_name)
+        item?.title = "${provider.context.getString(R.string.sortby_name)} ${if (sort == Medialibrary.SORT_ALPHA && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_filename)
-        item?.setTitle(if (sort == Medialibrary.SORT_FILENAME && !desc) R.string.sortby_filename_desc else R.string.sortby_filename)
+        item?.title = "${provider.context.getString(R.string.sortby_filename)} ${if (sort == Medialibrary.SORT_FILENAME && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_artist_name)
-        item?.setTitle(if (sort == Medialibrary.SORT_ARTIST && !desc) R.string.sortby_artist_name_desc else R.string.sortby_artist_name)
+        item?.title = "${provider.context.getString(R.string.sortby_artist_name)} ${if (sort == Medialibrary.SORT_ARTIST && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_album_name)
-        item?.setTitle(if (sort == Medialibrary.SORT_ALBUM && !desc) R.string.sortby_album_name_desc else R.string.sortby_album_name)
+        item?.title = "${provider.context.getString(R.string.sortby_album_name)} ${if (sort == Medialibrary.SORT_ALBUM && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_length)
-        item?.setTitle(if (sort == Medialibrary.SORT_DURATION && !desc) R.string.sortby_length_desc else R.string.sortby_length)
+        item?.title = "${provider.context.getString(R.string.sortby_length)} ${if (sort == Medialibrary.SORT_DURATION && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_date)
-        item?.setTitle(if (sort == Medialibrary.SORT_RELEASEDATE && !desc) R.string.sortby_date_desc else R.string.sortby_date)
+        item?.title = "${provider.context.getString(R.string.sortby_date)} ${if (sort == Medialibrary.SORT_RELEASEDATE && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_last_modified)
-        item?.setTitle(if (sort == Medialibrary.SORT_LASTMODIFICATIONDATE && !desc) R.string.sortby_last_modified_date_desc else R.string.sortby_last_modified_date)
+        item?.title = "${provider.context.getString(R.string.sortby_last_modified_date)} ${if (sort == Medialibrary.SORT_LASTMODIFICATIONDATE && !desc) "▼" else ""}"
         //        item = menu.findItem(R.id.ml_menu_sortby_number); TODO sort by track number
         //        if (item != null) item.setTitle(sort == Medialibrary.SORT_ && !desc ? R.string.sortby_number_desc : R.string.sortby_number);
 
@@ -418,19 +435,19 @@ object UiTools {
         val sort = model.sort
         val desc = model.desc
         var item: MenuItem? = menu.findItem(R.id.ml_menu_sortby_name)
-        item?.setTitle(if (sort == Medialibrary.SORT_ALPHA && !desc) R.string.sortby_name_desc else R.string.sortby_name)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_name)} ${if (sort == Medialibrary.SORT_ALPHA && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_filename)
-        item?.setTitle(if (sort == Medialibrary.SORT_FILENAME && !desc) R.string.sortby_filename_desc else R.string.sortby_filename)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_filename)} ${if (sort == Medialibrary.SORT_FILENAME && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_artist_name)
-        item?.setTitle(if (sort == Medialibrary.SORT_ARTIST && !desc) R.string.sortby_artist_name_desc else R.string.sortby_artist_name)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_artist_name)} ${if (sort == Medialibrary.SORT_ARTIST && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_album_name)
-        item?.setTitle(if (sort == Medialibrary.SORT_ALBUM && !desc) R.string.sortby_album_name_desc else R.string.sortby_album_name)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_album_name)} ${if (sort == Medialibrary.SORT_ALBUM && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_length)
-        item?.setTitle(if (sort == Medialibrary.SORT_DURATION && !desc) R.string.sortby_length_desc else R.string.sortby_length)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_length)} ${if (sort == Medialibrary.SORT_DURATION && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_date)
-        item?.setTitle(if (sort == Medialibrary.SORT_RELEASEDATE && !desc) R.string.sortby_date_desc else R.string.sortby_date)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_date)} ${if (sort == Medialibrary.SORT_RELEASEDATE && !desc) "▼" else ""}"
         item = menu.findItem(R.id.ml_menu_sortby_last_modified)
-        item?.setTitle(if (sort == Medialibrary.SORT_RELEASEDATE && !desc) R.string.sortby_last_modified_date_desc else R.string.sortby_last_modified_date)
+        item?.title = "${sortable.requireContext().getString(R.string.sortby_last_modified_date)} ${if (sort == Medialibrary.SORT_RELEASEDATE && !desc) "▼" else ""}"
         //        item = menu.findItem(R.id.ml_menu_sortby_number); TODO sort by track number
         //        if (item != null) item.setTitle(sort == Medialibrary.SORT_ && !desc ? R.string.sortby_number_desc : R.string.sortby_number);
 
@@ -663,4 +680,13 @@ fun getTvIconRes(mediaLibraryItem: MediaLibraryItem) = when (mediaLibraryItem.it
         }
     }
     else -> R.drawable.ic_browser_unknown_big_normal
+}
+
+fun View.getHeightWhenReady(listener: (height: Int) -> Unit) {
+    viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+        override fun onGlobalLayout() {
+            listener(height)
+            viewTreeObserver.removeOnGlobalLayoutListener(this)
+        }
+    })
 }

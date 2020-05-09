@@ -41,6 +41,7 @@ import org.videolan.vlc.providers.medialibrary.MedialibraryProvider
 import org.videolan.vlc.providers.medialibrary.VideoGroupsProvider
 import org.videolan.vlc.util.FileUtils
 import org.videolan.vlc.util.Permissions
+import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.min
@@ -73,6 +74,34 @@ object MediaUtils {
         else Permissions.askWriteStoragePermission(activity, false, callBack)
     }
 
+    suspend fun deleteMedia(mw: MediaLibraryItem, failCB: Runnable? = null) = withContext(Dispatchers.IO) {
+        val foldersToReload = LinkedList<String>()
+        val mediaPaths = LinkedList<String>()
+        for (media in mw.tracks) {
+            val path = media.uri.path
+            val parentPath = FileUtils.getParent(path)
+            if (FileUtils.deleteFile(media.uri)) parentPath?.let {
+                if (media.id > 0L && !foldersToReload.contains(it)) {
+                    foldersToReload.add(it)
+                }
+                mediaPaths.add(media.location)
+            }
+        }
+        val mediaLibrary = Medialibrary.getInstance()
+        for (folder in foldersToReload) mediaLibrary.reload(folder)
+        if (mw is Album) {
+            foldersToReload.forEach {
+                if (File(it).list().isNullOrEmpty()) {
+                    FileUtils.deleteFile(it)
+                }
+            }
+        }
+        if (mediaPaths.isEmpty()) {
+            failCB?.run()
+            false
+        } else true
+    }
+
     fun loadlastPlaylist(context: Context?, type: Int) {
         if (context == null) return
         SuspendDialogCallback(context) { service -> service.loadLastPlaylist(type) }
@@ -84,7 +113,8 @@ object MediaUtils {
             service.append(media)
             context.let {
                 if (it is Activity) {
-                    Snackbar.make(it.findViewById(android.R.id.content), R.string.appended, Snackbar.LENGTH_LONG).show()
+                    val text = context.resources.getQuantityString(R.plurals.tracks_appended, media.size, media.size)
+                    Snackbar.make(it.findViewById(android.R.id.content), text, Snackbar.LENGTH_LONG).show()
                 }
             }
         }
@@ -102,7 +132,8 @@ object MediaUtils {
             service.insertNext(media)
             context.let {
                 if (it is Activity) {
-                    Snackbar.make(it.findViewById(android.R.id.content), R.string.inserted, Snackbar.LENGTH_LONG).show()
+                    val text = context.resources.getQuantityString(R.plurals.tracks_inserted, media.size, media.size)
+                    Snackbar.make(it.findViewById(android.R.id.content), text, Snackbar.LENGTH_LONG).show()
                 }
             }
         }
@@ -205,7 +236,9 @@ object MediaUtils {
             when (count) {
                 0 -> return@SuspendDialogCallback
                 in 1..MEDIALIBRARY_PAGE_SIZE -> play(withContext(Dispatchers.IO) {
-                    provider.getAll().toList()
+                    provider.getAll().flatMap {
+                        it.media(Medialibrary.SORT_DEFAULT, false, it.mediaCount(), 0).toList()
+                    }
                 })
                 else -> {
                     var index = 0

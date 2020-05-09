@@ -66,10 +66,16 @@ AndroidMediaLibrary::clearDatabase(bool restorePlaylists) {
     p_ml->clearDatabase(restorePlaylists);
 }
 
-bool
+void
 AndroidMediaLibrary::addDevice(const std::string& uuid, const std::string& path, bool removable)
 {
-    return p_lister->addDevice(uuid, path, removable);
+    p_lister->addDevice(uuid, path, removable);
+}
+
+bool
+AndroidMediaLibrary::isDeviceKnown(const std::string& uuid, const std::string& path, bool removable)
+{
+    return p_ml->isDeviceKnown(uuid, path, removable);
 }
 
 std::vector<std::tuple<std::string, std::string, bool>>
@@ -276,6 +282,12 @@ AndroidMediaLibrary::searchFromPLaylist( int64_t playlistId, const std::string& 
 {
     auto playlist = p_ml->playlist(playlistId);
     return playlist == nullptr ? nullptr : playlist->searchMedia(query, params);
+}
+
+medialibrary::Query<medialibrary::IFolder>
+AndroidMediaLibrary::searchFolders(const std::string& query, const medialibrary::QueryParameters* params)
+{
+    return p_ml->searchFolders(query, medialibrary::IMedia::Type::Video, params);
 }
 
 medialibrary::Query<medialibrary::IMedia>
@@ -515,6 +527,12 @@ AndroidMediaLibrary::videoGroups( const medialibrary::QueryParameters* params )
     return p_ml->mediaGroups(params);
 }
 
+medialibrary::Query<medialibrary::IMediaGroup>
+AndroidMediaLibrary::searchVideoGroups( const std::string& query, const medialibrary::QueryParameters* params )
+{
+    return p_ml->searchMediaGroups(query, params);
+}
+
 medialibrary::MediaGroupPtr
 AndroidMediaLibrary::videoGroup( const int64_t groupId )
 {
@@ -549,8 +567,8 @@ AndroidMediaLibrary::groupRemoveId( const int64_t groupId, const int64_t mediaId
     return group != nullptr && group->remove(mediaId);
 }
 
-const std::string&
-AndroidMediaLibrary::groupeName( const int64_t groupId )
+std::string
+AndroidMediaLibrary::groupName( const int64_t groupId )
 {
     const medialibrary::MediaGroupPtr group = p_ml->mediaGroup(groupId);
     return group == nullptr ? nullptr : group->name();
@@ -582,6 +600,31 @@ AndroidMediaLibrary::groupDestroy( const int64_t groupId )
 {
     medialibrary::MediaGroupPtr group = p_ml->mediaGroup(groupId);
     return group != nullptr && group->destroy();
+}
+
+medialibrary::MediaGroupPtr
+AndroidMediaLibrary::createMediaGroup( std::string name )
+{
+    return p_ml->createMediaGroup(name);
+}
+
+bool
+AndroidMediaLibrary::regroupAll()
+{
+    return p_ml->regroupAll();
+}
+
+bool
+AndroidMediaLibrary::regroup(int64_t mediaId)
+{
+    auto media = p_ml->media(mediaId);
+    return media != nullptr && media->regroup();
+}
+
+medialibrary::MediaGroupPtr
+AndroidMediaLibrary::createMediaGroup( const std::vector<int64_t> mediaIds )
+{
+    return p_ml->createMediaGroup(mediaIds);
 }
 
 void

@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -534,106 +535,84 @@ abstract public class Medialibrary {
     }
 
     public void addMediaCb(MediaCb mediaUpdatedCb) {
-        if (!mIsInitiated) return;
         synchronized (mMediaCbs) {
-//            if (mMediaCbs.isEmpty()) {
-//                nativeSetMediaAddedCbFlag(FLAG_MEDIA_ADDED_AUDIO|FLAG_MEDIA_ADDED_VIDEO);
-//                nativeSetMediaUpdatedCbFlag(FLAG_MEDIA_UPDATED_AUDIO|FLAG_MEDIA_UPDATED_VIDEO);
-//            }
             mMediaCbs.add(mediaUpdatedCb);
         }
     }
 
     public void removeMediaCb(MediaCb mediaUpdatedCb) {
-        if (!mIsInitiated) return;
         synchronized (mMediaCbs) {
             mMediaCbs.remove(mediaUpdatedCb);
-//            if (mMediaCbs.isEmpty()) {
-//                nativeSetMediaAddedCbFlag(0);
-//                nativeSetMediaUpdatedCbFlag(0);
-//            }
         }
     }
 
     public void addArtistsCb(ArtistsCb artistsAddedCb) {
-        if (!mIsInitiated) return;
         synchronized (mArtistsCbs) {
             mArtistsCbs.add(artistsAddedCb);
         }
     }
 
     public void removeArtistsCb(ArtistsCb artistsAddedCb) {
-        if (!mIsInitiated) return;
         synchronized (mArtistsCbs) {
             mArtistsCbs.remove(artistsAddedCb);
         }
     }
 
     public void addAlbumsCb(AlbumsCb AlbumsAddedCb) {
-        if (!mIsInitiated) return;
         synchronized (mAlbumsCbs) {
             mAlbumsCbs.add(AlbumsAddedCb);
         }
     }
 
     public void removeAlbumsCb(AlbumsCb AlbumsAddedCb) {
-        if (!mIsInitiated) return;
         synchronized (mAlbumsCbs) {
             mAlbumsCbs.remove(AlbumsAddedCb);
         }
     }
 
     public void addGenreCb(GenresCb GenreCb) {
-        if (!mIsInitiated) return;
         synchronized (mGenreCbs) {
             this.mGenreCbs.add(GenreCb);
         }
     }
 
     public void removeGenreCb(GenresCb GenreCb) {
-        if (!mIsInitiated) return;
         synchronized (mGenreCbs) {
             this.mGenreCbs.remove(GenreCb);
         }
     }
 
     public void addPlaylistCb(PlaylistsCb playlistCb) {
-        if (!mIsInitiated) return;
         synchronized (mPlaylistCbs) {
             this.mPlaylistCbs.add(playlistCb);
         }
     }
 
     public void removePlaylistCb(PlaylistsCb playlistCb) {
-        if (!mIsInitiated) return;
         synchronized (mPlaylistCbs) {
             this.mPlaylistCbs.remove(playlistCb);
         }
     }
 
     public void addHistoryCb(HistoryCb historyCb) {
-        if (!mIsInitiated) return;
         synchronized (mHistoryCbs) {
             this.mHistoryCbs.add(historyCb);
         }
     }
 
     public void removeHistoryCb(HistoryCb historyCb) {
-        if (!mIsInitiated) return;
         synchronized (mHistoryCbs) {
             this.mHistoryCbs.remove(historyCb);
         }
     }
 
     public void addMediaGroupCb(MediaGroupCb mediaGroupCb) {
-        if (!mIsInitiated) return;
         synchronized (mMediaGroupCbs) {
             this.mMediaGroupCbs.add(mediaGroupCb);
         }
     }
 
     public void removeMediaGroupCb(MediaGroupCb mediaGroupCb) {
-        if (!mIsInitiated) return;
         synchronized (mMediaGroupCbs) {
             this.mMediaGroupCbs.remove(mediaGroupCb);
         }
@@ -696,7 +675,8 @@ abstract public class Medialibrary {
     abstract public void banFolder(@NonNull String path);
     abstract public void unbanFolder(@NonNull String path);
     abstract public String[] getDevices();
-    abstract public boolean addDevice(@NonNull String uuid, @NonNull String path, boolean removable);
+    abstract public void addDevice(@NonNull String uuid, @NonNull String path, boolean removable);
+    abstract public boolean isDeviceKnown(@NonNull String uuid, @NonNull String path, boolean removable);
     abstract public void discover(@NonNull String path);
     abstract public void removeFolder(@NonNull String mrl);
     abstract public String[] getFoldersList();
@@ -712,8 +692,16 @@ abstract public class Medialibrary {
     abstract public int getVideoCount();
     abstract public int getAudioCount();
     abstract public VideoGroup[] getVideoGroups(int sort, boolean desc, int nbItems, int offset);
-    abstract public int getVideoGroupsCount();
+    abstract public int getVideoGroupsCount(@Nullable String query);
     abstract public void setVideoGroupsPrefixLength(int lenght);
+
+    abstract public VideoGroup createVideoGroup(String name);
+
+    abstract public VideoGroup createVideoGroup(long[] ids);
+
+    abstract public boolean regroupAll();
+
+    abstract public boolean regroup(long mediaId);
     abstract public Album[] getAlbums();
     abstract public Album[] getAlbums(int sort, boolean desc);
     abstract public Album[] getPagedAlbums(int sort, boolean desc, int nbItems, int offset);
@@ -775,4 +763,7 @@ abstract public class Medialibrary {
     abstract public Genre[] searchGenre(String query, int sort, boolean desc, int nbItems, int offset);
     abstract public Playlist[] searchPlaylist(String query);
     abstract public Playlist[] searchPlaylist(String query, int sort, boolean desc, int nbItems, int offset);
+    abstract public Folder[] searchFolders(String query, int sort, boolean desc, int nbItems, int offset);
+    abstract public int getFoldersCount(String query);
+    abstract public VideoGroup[] searchVideoGroups(String query, int sort, boolean desc, int nbItems, int offset);
 }

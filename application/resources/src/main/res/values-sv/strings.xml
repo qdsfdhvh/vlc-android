@@ -73,6 +73,7 @@
         <item quantity="one">1 sång</item>
         <item quantity="other">%d låtar</item>
     </plurals>
+    <string name="track_info_copied_to_clipboard">Spårinformation kopierades till urklipp</string>
 
     <string name="artists">Artister</string>
     <string name="albums">Album</string>
@@ -211,7 +212,7 @@
     <string name="favorite_removed">Togs bort från favoriter</string>
 
     <string name="open">Öppna</string>
-    <string name="open_mrl">Ström</string>
+    <string name="streams">Strömmar</string>
     <string name="open_mrl_dialog_title">Öppna nätverkström</string>
     <string name="open_mrl_dialog_msg">Ange nätverksadress: d.v.s. http://, mms:// eller rtsp://</string>
     <string name="error_not_compatible">Tyvärr, din enhet stödjer för tillfället inte denna version av VLC för Android™.</string>
@@ -684,7 +685,7 @@
     <string name="add">Lägg till</string>
     <string name="add_to_new_playlist">Lägg till i ny spellista</string>
     <string name="theme_follow_system_mode">Följ systemläge</string>
-    <string name="resume_card_message">Återuppta uppspelning vid %1$s?</string>
+    <string name="resume_card_message">Återuppta uppspelning av %1$s?</string>
     <string name="misc">Övrigt</string>
     <string name="popup_force_legacy_title">Använd anpassad popupp för bild-i-bild</string>
     <string name="popup_force_legacy_summary">Använd anpassad popupp för bild-i-bild som kan storleksändras</string>
@@ -698,8 +699,14 @@
     <string name="preamp">Försteg</string>
     <string name="presets">Förinställningar</string>
     <string name="reset">Nollställ</string>
-    <string name="appended">Lade spår i kö</string>
-    <string name="inserted">Lade till spår</string>
+    <plurals name="tracks_inserted">
+        <item quantity="one">%d spår lades till</item>
+        <item quantity="other">%d spår lades till</item>
+    </plurals>
+    <plurals name="tracks_appended">
+        <item quantity="one">%d spår lades till i slutet</item>
+        <item quantity="other">%d spår lades till i slutet</item>
+    </plurals>
     <string name="remove_current">Ta bort nuvarande</string>
     <string name="validation_delete_playlist">Är du säker på att du vill radera denna spellista?</string>
     <string name="validation_delete_playlist_text">Denna handling kan inte ångras.</string>
@@ -792,4 +799,8 @@
     <string name="all_subfolders">Lägg till denna mapp och undermappar</string>
     <string name="playlist_existing">Spellistan %s finns redan</string>
     <string name="new_title">Ny titel</string>
+    <string name="browse">Bläddra</string>
+    <string name="more">Mer</string>
+    <string name="favorites">Favoriter</string>
+    <string name="new_stream">Ny ström</string>
 </resources>

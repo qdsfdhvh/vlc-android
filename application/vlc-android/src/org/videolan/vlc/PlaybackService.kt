@@ -465,6 +465,7 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate() {
         dispatcher.onServicePreSuperOnCreate()
+        forceForeground()
         super.onCreate()
         setupScope()
         NotificationHelper.createNotificationChannels(applicationContext)
@@ -484,7 +485,6 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
 
         updateHasWidget()
         if (!this::mediaSession.isInitialized) initMediaSession()
-        forceForeground()
 
         val filter = IntentFilter().apply {
             priority = Integer.MAX_VALUE
@@ -596,12 +596,15 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
     @TargetApi(Build.VERSION_CODES.O)
     private fun forceForeground() {
         if (!AndroidUtil.isOOrLater || isForeground) return
-        val ctx = this@PlaybackService
+        val ctx = applicationContext
         val stopped = PlayerController.playbackState == PlaybackStateCompat.STATE_STOPPED
         val notification = if (this::notification.isInitialized && !stopped) notification
-        else NotificationHelper.createPlaybackNotification(ctx, false,
+        else {
+            val pi = if (::playlistManager.isInitialized) sessionPendingIntent else null
+            NotificationHelper.createPlaybackNotification(ctx, false,
                 ctx.resources.getString(R.string.loading), "", "", null,
-                false, true, mediaSession.sessionToken, sessionPendingIntent)
+                false, true, null, pi)
+        }
         startForeground(3, notification)
         isForeground = true
         if (stopped) lifecycleScope.launch { hideNotification(true) }
@@ -763,7 +766,7 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
 
     private fun hideNotification(remove: Boolean): Boolean {
         notificationShowing = false
-        return cbActor.safeOffer(HideNotification(remove))
+        return if (::cbActor.isInitialized) cbActor.safeOffer(HideNotification(remove)) else false
     }
 
     private fun hideNotificationInternal(remove: Boolean) {

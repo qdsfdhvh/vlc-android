@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="org.videolan.mobile.app">
+    package="org.videolan.mobile.app"
+    android:installLocation="auto">
 
     <application
         android:name=".VLCApplication"
@@ -17,7 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VLC.Transparent"
         android:usesCleartextTraffic="true"
-        android:extractNativeLibs="false"
         android:requestLegacyExternalStorage="true"
         tools:targetApi="q" />
 </manifest>

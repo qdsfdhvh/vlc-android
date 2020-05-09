@@ -22,63 +22,50 @@
 
 package org.videolan.vlc.gui.browser
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.SparseBooleanArray
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ActionMode
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.*
 import org.videolan.medialibrary.interfaces.Medialibrary
+import org.videolan.medialibrary.interfaces.media.Album
 import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.medialibrary.interfaces.media.Playlist
 import org.videolan.medialibrary.media.MediaLibraryItem
-import org.videolan.resources.AndroidDevices
-import org.videolan.resources.TAG_ITEM
 import org.videolan.tools.MultiSelectHelper
 import org.videolan.tools.isStarted
 import org.videolan.vlc.R
-import org.videolan.vlc.gui.AudioPlayerContainerActivity
-import org.videolan.vlc.gui.ContentActivity
-import org.videolan.vlc.gui.InfoActivity
-import org.videolan.vlc.gui.MainActivity
+import org.videolan.vlc.gui.BaseFragment
 import org.videolan.vlc.gui.helpers.SparseBooleanArrayParcelable
 import org.videolan.vlc.gui.helpers.UiTools
 import org.videolan.vlc.gui.helpers.UiTools.snackerConfirm
 import org.videolan.vlc.gui.helpers.hf.StoragePermissionsDelegate.Companion.getWritePermission
-import org.videolan.vlc.gui.view.SwipeRefreshLayout
 import org.videolan.vlc.interfaces.Filterable
 import org.videolan.vlc.media.MediaUtils
-import org.videolan.vlc.util.FileUtils
 import org.videolan.vlc.util.Permissions
 import org.videolan.vlc.viewmodels.MedialibraryViewModel
 import org.videolan.vlc.viewmodels.SortableModel
+import org.videolan.vlc.viewmodels.prepareOptionsMenu
+import org.videolan.vlc.viewmodels.sortMenuTitles
 import java.lang.Runnable
-import java.util.*
 
 private const val TAG = "VLC/MediaBrowserFragment"
 private const val KEY_SELECTION = "key_selection"
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
-abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.Callback, Filterable {
+abstract class MediaBrowserFragment<T : SortableModel> : BaseFragment(), Filterable {
 
     private lateinit var searchButtonView: View
-    lateinit var swipeRefreshLayout: SwipeRefreshLayout
     lateinit var mediaLibrary: Medialibrary
-    var actionMode: ActionMode? = null
-    var fabPlay: FloatingActionButton? = null
     private var savedSelection = SparseBooleanArray()
     private val transition = ChangeBounds().apply {
         interpolator = AccelerateDecelerateInterpolator()
@@ -87,41 +74,19 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
 
     open lateinit var viewModel: T
         protected set
-    open val hasTabs = false
 
-    private var refreshJob : Job? = null
-        set(value) {
-            field?.cancel()
-            field = value
-        }
-
-    abstract fun getTitle(): String
     abstract fun getMultiHelper(): MultiSelectHelper<T>?
-
-    open val subTitle: String?
-        get() = null
-
-    val menu: Menu?
-        get() = (activity as? AudioPlayerContainerActivity)?.menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mediaLibrary = Medialibrary.getInstance()
-        setHasOptionsMenu(!AndroidDevices.isAndroidTv)
         (savedInstanceState?.getParcelable<SparseBooleanArrayParcelable>(KEY_SELECTION))?.let { savedSelection = it.data }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         searchButtonView = view.findViewById(R.id.searchButton)
-        view.findViewById<SwipeRefreshLayout>(R.id.swipeLayout)?.let {
-            swipeRefreshLayout = it
-            it.setColorSchemeResources(R.color.orange700)
-        }
-        if (hasFAB()) fabPlay = requireActivity().findViewById(R.id.fab)
     }
-
-    protected open fun hasFAB() = ::swipeRefreshLayout.isInitialized
 
     protected open fun setBreadcrumb() {
         activity?.findViewById<RecyclerView>(R.id.ariane)?.visibility = View.GONE
@@ -134,15 +99,11 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
     override fun onStart() {
         super.onStart()
         setBreadcrumb()
-        updateActionBar()
-        setFabPlayVisibility(true)
-        fabPlay?.setOnClickListener { v -> onFabPlayClick(v) }
     }
 
     override fun onStop() {
         super.onStop()
         releaseBreadCrumb()
-        setFabPlayVisibility(false)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -152,25 +113,6 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
         super.onSaveInstanceState(outState)
     }
 
-    private fun updateActionBar() {
-        val activity = activity as? AppCompatActivity ?: return
-        activity.supportActionBar?.let {
-            it.title = getTitle()
-            it.subtitle = subTitle
-            activity.invalidateOptionsMenu()
-        }
-        if (activity is ContentActivity) activity.setTabLayoutVisibility(hasTabs)
-    }
-
-
-    open fun setFabPlayVisibility(enable: Boolean) {
-        fabPlay?.run {
-            if (enable) show()
-            else hide()
-        }
-    }
-
-    open fun onFabPlayClick(view: View) {}
     abstract fun onRefresh()
     open fun clear() {}
 
@@ -184,7 +126,7 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
             for (item in items) {
                 if (!isStarted()) break
                 when(item) {
-                    is MediaWrapper -> if (getWritePermission(item.uri)) deleteMedia(item)
+                    is MediaWrapper -> if (getWritePermission(item.uri)) MediaUtils.deleteMedia(item)
                     is Playlist -> withContext(Dispatchers.IO) { item.delete() }
                 }
             }
@@ -194,73 +136,43 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
 
     protected open fun removeItem(item: MediaLibraryItem): Boolean {
         val view = view ?: return false
-        when (item.itemType) {
-            MediaLibraryItem.TYPE_PLAYLIST -> snackerConfirm(view, getString(R.string.confirm_delete_playlist, item.title), Runnable { MediaUtils.deletePlaylist(item as Playlist) })
-            MediaLibraryItem.TYPE_MEDIA -> {
+        when (item) {
+            is Playlist -> lifecycleScope.snackerConfirm(view, getString(R.string.confirm_delete_playlist, item.title)) { MediaUtils.deletePlaylist(item) }
+            is MediaWrapper-> {
                 val deleteAction = Runnable {
-                    if (isStarted()) lifecycleScope.launch { deleteMedia(item, false, null) }
+                    if (isStarted()) lifecycleScope.launch {
+                        if (!MediaUtils.deleteMedia(item, null)) onDeleteFailed(item)
+                    }
                 }
-                val resid = if ((item as MediaWrapper).type == MediaWrapper.TYPE_DIR) R.string.confirm_delete_folder else R.string.confirm_delete
-                snackerConfirm(view, getString(resid, item.getTitle()), Runnable { if (Permissions.checkWritePermission(requireActivity(), item, deleteAction)) deleteAction.run() })
+                val resid = if (item.type == MediaWrapper.TYPE_DIR) R.string.confirm_delete_folder else R.string.confirm_delete
+                lifecycleScope.snackerConfirm(view, getString(resid, item.getTitle())) { if (Permissions.checkWritePermission(requireActivity(), item, deleteAction)) deleteAction.run() }
+            }
+            is Album -> {
+                val deleteAction = Runnable {
+                    if (isStarted()) lifecycleScope.launch {
+                        if (!MediaUtils.deleteMedia(item, null)) onDeleteFailed(item)
+                    }
+                }
+                val resid = R.string.confirm_delete_album
+                lifecycleScope.snackerConfirm(view, getString(resid, item.getTitle())) { if (item.tracks.any { Permissions.checkWritePermission(requireActivity(), it, deleteAction) }) deleteAction.run() }
             }
             else -> return false
         }
         return true
     }
 
-    protected suspend fun deleteMedia(mw: MediaLibraryItem, refresh: Boolean = false, failCB: Runnable? = null) = withContext(Dispatchers.IO) {
-        val foldersToReload = LinkedList<String>()
-        val mediaPaths = LinkedList<String>()
-        for (media in mw.tracks) {
-            val path = media.uri.path
-            val parentPath = FileUtils.getParent(path)
-            if (FileUtils.deleteFile(media.uri)) parentPath?.let {
-                if (media.id > 0L && !foldersToReload.contains(it)) {
-                    foldersToReload.add(it)
-                }
-                mediaPaths.add(media.location)
-            } else
-                onDeleteFailed(media)
-        }
-        for (folder in foldersToReload) mediaLibrary.reload(folder)
-        if (isStarted()) launch {
-            if (mediaPaths.isEmpty()) {
-                failCB?.run()
-                return@launch
-            }
-            if (refresh) onRefresh()
-        }
-    }
-
-    private fun onDeleteFailed(media: MediaWrapper) {
-        if (isAdded) view?.let { UiTools.snacker(it, getString(R.string.msg_delete_failed, media.title)) }
-    }
-
-    protected fun showInfoDialog(item: MediaLibraryItem) {
-        val i = Intent(activity, InfoActivity::class.java)
-        i.putExtra(TAG_ITEM, item)
-        startActivity(i)
+    private fun onDeleteFailed(item: MediaLibraryItem) {
+        if (isAdded) view?.let { UiTools.snacker(it, getString(R.string.msg_delete_failed, item.title)) }
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        (viewModel as? MedialibraryViewModel)?.run {
-            menu.findItem(R.id.ml_menu_sortby).isVisible = canSortByName()
-            menu.findItem(R.id.ml_menu_sortby_filename).isVisible = canSortByFileNameName()
-            menu.findItem(R.id.ml_menu_sortby_artist_name).isVisible = canSortByArtist()
-            menu.findItem(R.id.ml_menu_sortby_album_name).isVisible = canSortByAlbum()
-            menu.findItem(R.id.ml_menu_sortby_length).isVisible = canSortByDuration()
-            menu.findItem(R.id.ml_menu_sortby_date).isVisible = canSortByReleaseDate()
-            menu.findItem(R.id.ml_menu_sortby_last_modified).isVisible = canSortByLastModified()
-            menu.findItem(R.id.ml_menu_sortby_number).isVisible = false
-        }
+        (viewModel as? MedialibraryViewModel)?.prepareOptionsMenu(menu)
         sortMenuTitles()
     }
 
-    open fun sortMenuTitles() {
-        (viewModel as? MedialibraryViewModel)?.let { model ->
-            menu?.let { UiTools.updateSortTitles(it, model.providers[0]) }
-        }
+    open fun sortMenuTitles(index : Int = 0) {
+        menu?.let { (viewModel as? MedialibraryViewModel)?.sortMenuTitles(it, index) }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -293,6 +205,10 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
                 sortBy(Medialibrary.SORT_ALBUM)
                 return true
             }
+            R.id.ml_menu_sortby_media_number -> {
+                sortBy(Medialibrary.NbMedia)
+                return true
+            }
             R.id.ml_menu_sortby_number -> {
                 sortBy(Medialibrary.SORT_FILESIZE) //TODO
                 return super.onOptionsItemSelected(item)
@@ -303,23 +219,6 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
 
     protected open fun sortBy(sort: Int) {
         viewModel.sort(sort)
-    }
-
-    fun startActionMode() {
-        val activity = activity as AppCompatActivity? ?: return
-        actionMode = activity.startSupportActionMode(this)
-        setFabPlayVisibility(false)
-    }
-
-    protected fun stopActionMode() {
-        actionMode?.let {
-            it.finish()
-            setFabPlayVisibility(true)
-        }
-    }
-
-    fun invalidateActionMode() {
-        actionMode?.invalidate()
     }
 
     fun restoreMultiSelectHelper() {
@@ -337,8 +236,6 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
             }
         }
     }
-
-    override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false
 
     override fun filter(query: String) = viewModel.filter(query)
 
@@ -363,12 +260,4 @@ abstract class MediaBrowserFragment<T : SortableModel> : Fragment(), ActionMode.
     }
 
     override fun allowedToExpand() = true
-
-    protected fun setRefreshing(refreshing: Boolean) {
-        refreshJob = lifecycleScope.launchWhenStarted {
-            if (refreshing) delay(300L)
-            swipeRefreshLayout.isRefreshing = refreshing
-            (activity as? MainActivity)?.refreshing = refreshing
-        }
-    }
 }

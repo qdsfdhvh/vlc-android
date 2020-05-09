@@ -192,7 +192,7 @@ class AudioPlayer : Fragment(), PlaylistAdapter.IPlayer, TextWatcher, IAudioPlay
     }
 
     private val ctxReceiver: CtxActionReceiver = object : CtxActionReceiver {
-        override fun onCtxAction(position: Int, option: Int) {
+        override fun onCtxAction(position: Int, option: Long) {
             if (position in 0 until playlistAdapter.itemCount) when (option) {
                 CTX_SET_RINGTONE -> activity?.setRingtone(playlistAdapter.getItem(position))
                 CTX_ADD_TO_PLAYLIST -> {
@@ -594,7 +594,7 @@ class AudioPlayer : Fragment(), PlaylistAdapter.IPlayer, TextWatcher, IAudioPlay
     private val mCoverMediaSwitcherListener = object : AudioMediaSwitcherListener by AudioMediaSwitcher.EmptySwitcherListener {
 
         override fun onMediaSwitching() {
-            (activity as? AudioPlayerContainerActivity)?.bottomSheetBehavior?.lock(true)
+            (activity as? AudioPlayerContainerActivity)?.playerBehavior?.lock(true)
         }
 
         override fun onMediaSwitched(position: Int) {
@@ -602,7 +602,7 @@ class AudioPlayer : Fragment(), PlaylistAdapter.IPlayer, TextWatcher, IAudioPlay
                 AudioMediaSwitcherListener.PREVIOUS_MEDIA -> playlistModel.previous(true)
                 AudioMediaSwitcherListener.NEXT_MEDIA -> playlistModel.next()
             }
-            (activity as? AudioPlayerContainerActivity)?.bottomSheetBehavior?.lock(false)
+            (activity as? AudioPlayerContainerActivity)?.playerBehavior?.lock(false)
         }
     }
 

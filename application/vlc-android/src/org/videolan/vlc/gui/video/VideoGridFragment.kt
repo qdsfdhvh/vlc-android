@@ -21,6 +21,7 @@
 package org.videolan.vlc.gui.video
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -48,10 +49,12 @@ import org.videolan.vlc.gui.ContentActivity
 import org.videolan.vlc.gui.SecondaryActivity
 import org.videolan.vlc.gui.browser.MediaBrowserFragment
 import org.videolan.vlc.gui.dialogs.CtxActionReceiver
+import org.videolan.vlc.gui.dialogs.RenameDialog
 import org.videolan.vlc.gui.dialogs.SavePlaylistDialog
 import org.videolan.vlc.gui.dialogs.showContext
 import org.videolan.vlc.gui.helpers.ItemOffsetDecoration
 import org.videolan.vlc.gui.helpers.UiTools
+import org.videolan.vlc.gui.helpers.UiTools.addToGroup
 import org.videolan.vlc.gui.helpers.UiTools.addToPlaylist
 import org.videolan.vlc.gui.view.EmptyLoadingState
 import org.videolan.vlc.media.MediaUtils
@@ -76,6 +79,7 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
     private lateinit var multiSelectHelper: MultiSelectHelper<MediaLibraryItem>
     private lateinit var binding: VideoGridBinding
     private var gridItemDecoration: RecyclerView.ItemDecoration? = null
+    private lateinit var settings: SharedPreferences
 
     private fun FragmentActivity.open(item: MediaLibraryItem) {
         val i = Intent(activity, SecondaryActivity::class.java)
@@ -87,9 +91,9 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!::settings.isInitialized) settings = Settings.getInstance(requireContext())
         if (!::videoListAdapter.isInitialized) {
-            val preferences = Settings.getInstance(requireContext())
-            val seenMarkVisible = preferences.getBoolean("media_seen", true)
+            val seenMarkVisible = settings.getBoolean("media_seen", true)
             videoListAdapter = VideoListAdapter(seenMarkVisible)
             multiSelectHelper = videoListAdapter.multiSelectHelper
             val folder = if (savedInstanceState != null) savedInstanceState.getParcelable<Folder>(KEY_FOLDER)
@@ -110,14 +114,16 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
             (it as? PagedList<MediaLibraryItem>)?.let { videoListAdapter.submitList(it) }
             updateEmptyView()
             restoreMultiSelectHelper()
+            if (viewModel.group != null && it.size < 2) requireActivity().finish()
         })
 
         viewModel.provider.loading.observe(this, Observer { loading ->
-            setRefreshing(loading)
-            if (!loading) {
-                setFabPlayVisibility(true)
-                menu?.let { UiTools.updateSortTitles(it, viewModel.provider) }
-                restoreMultiSelectHelper()
+            setRefreshing(loading) { refresh ->
+                if (!refresh) {
+                    setFabPlayVisibility(true)
+                    menu?.let { UiTools.updateSortTitles(it, viewModel.provider) }
+                    restoreMultiSelectHelper()
+                }
             }
         })
         videoListAdapter.showFilename.set(viewModel.groupingType == VideoGroupingType.NONE && viewModel.provider.sort == Medialibrary.SORT_FILENAME)
@@ -125,11 +131,13 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        menu.findItem(R.id.ml_menu_last_playlist).isVisible = true
+        menu.findItem(R.id.ml_menu_last_playlist).isVisible = settings.contains(KEY_MEDIA_LAST_PLAYLIST)
         menu.findItem(R.id.ml_menu_video_group).isVisible = viewModel.group == null && viewModel.folder == null
-        val displayInCards = Settings.getInstance(requireActivity()).getBoolean("video_display_in_cards", true)
+        val displayInCards = settings.getBoolean("video_display_in_cards", true)
         menu.findItem(R.id.ml_menu_display_grid).isVisible = !displayInCards
         menu.findItem(R.id.ml_menu_display_list).isVisible = displayInCards
+        menu.findItem(R.id.rename_group).isVisible = viewModel.group != null
+        menu.findItem(R.id.ungroup).isVisible = viewModel.group != null
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -139,15 +147,15 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
                 true
             }
             R.id.ml_menu_display_list, R.id.ml_menu_display_grid -> {
-                val displayInCards = Settings.getInstance(requireActivity()).getBoolean("video_display_in_cards", true)
-                Settings.getInstance(requireActivity()).putSingle("video_display_in_cards", !displayInCards)
+                val displayInCards = settings.getBoolean("video_display_in_cards", true)
+                settings.putSingle("video_display_in_cards", !displayInCards)
                 (activity as ContentActivity).forceLoadVideoFragment()
                 true
             }
             R.id.video_min_group_length_disable -> {
                 lifecycleScope.launchWhenStarted {
                     withContext(Dispatchers.IO) {
-                        Settings.getInstance(requireActivity()).edit().putString("video_min_group_length", "-1").commit()
+                        settings.edit().putString("video_min_group_length", "-1").commit()
                     }
                     changeGroupingType(VideoGroupingType.NONE)
                 }
@@ -156,7 +164,7 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
             R.id.video_min_group_length_folder -> {
                 lifecycleScope.launchWhenStarted {
                     withContext(Dispatchers.IO) {
-                        Settings.getInstance(requireActivity()).edit().putString("video_min_group_length", "0").commit()
+                        settings.edit().putString("video_min_group_length", "0").commit()
                     }
                     changeGroupingType(VideoGroupingType.FOLDER)
                 }
@@ -165,10 +173,18 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
             R.id.video_min_group_length_name -> {
                 lifecycleScope.launchWhenStarted {
                     withContext(Dispatchers.IO) {
-                        Settings.getInstance(requireActivity()).edit().putString("video_min_group_length", "6").commit()
+                        settings.edit().putString("video_min_group_length", "6").commit()
                     }
                     changeGroupingType(VideoGroupingType.NAME)
                 }
+                true
+            }
+            R.id.rename_group -> {
+                viewModel.group?.let { renameGroup(it) }
+                true
+            }
+            R.id.ungroup -> {
+                viewModel.group?.let { viewModel.ungroup(it) }
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -240,7 +256,8 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
     }
 
     override fun getTitle() = when(viewModel.groupingType) {
-        VideoGroupingType.NONE -> viewModel.folder?.displayTitle ?: viewModel.group?.displayTitle ?: getString(R.string.videos)
+        VideoGroupingType.NONE -> viewModel.folder?.displayTitle ?: viewModel.group?.displayTitle
+        ?: getString(R.string.videos)
         VideoGroupingType.FOLDER -> getString(R.string.videos_folders_title)
         VideoGroupingType.NAME -> getString(R.string.videos_groups_title)
     }
@@ -255,7 +272,7 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
         val res = resources
         if (gridItemDecoration == null)
             gridItemDecoration = ItemOffsetDecoration(resources, R.dimen.left_right_1610_margin, R.dimen.top_bottom_1610_margin)
-        val listMode = !Settings.getInstance(requireContext()).getBoolean("video_display_in_cards", true)
+        val listMode = !settings.getBoolean("video_display_in_cards", true)
 
         // Select between grid or list
         binding.videoGrid.removeItemDecoration(gridItemDecoration!!)
@@ -278,7 +295,7 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
     private fun updateEmptyView() {
         if (!::binding.isInitialized) return
         val empty = viewModel.isEmpty() && videoListAdapter.currentList.isNullOrEmpty()
-        val working = mediaLibrary.isWorking
+        val working = viewModel.provider.loading.value != false
         binding.emptyLoading.state = when {
             empty && working -> EmptyLoadingState.LOADING
             empty && !working -> EmptyLoadingState.EMPTY
@@ -314,6 +331,13 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
             VideoGroupingType.NONE -> {
                 menu.findItem(R.id.action_video_append).isVisible = PlaylistManager.hasMedia()
                 menu.findItem(R.id.action_video_info).isVisible = count == 1
+                menu.findItem(R.id.action_remove_from_group).isVisible = viewModel.group != null
+            }
+            VideoGroupingType.NAME -> {
+                menu.findItem(R.id.action_ungroup).isVisible = !multiSelectHelper.getSelection().any { it !is VideoGroup }
+                menu.findItem(R.id.action_rename).isVisible = count == 1 && !multiSelectHelper.getSelection().any { it !is VideoGroup }
+                menu.findItem(R.id.action_group_similar).isVisible = count == 1 && multiSelectHelper.getSelection().filterIsInstance<VideoGroup>().isEmpty()
+                menu.findItem(R.id.action_add_to_group).isVisible = multiSelectHelper.getSelection().filterIsInstance<VideoGroup>().isEmpty()
             }
             else -> {}
         }
@@ -342,6 +366,8 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
                         }
                         R.id.action_mode_audio_add_playlist -> requireActivity().addToPlaylist(list)
                         R.id.action_video_delete -> removeItems(list)
+                        R.id.action_remove_from_group -> viewModel.removeFromGroup(list)
+                        R.id.action_ungroup -> viewModel.ungroup(list)
                         else -> {
                             stopActionMode()
                             return false
@@ -367,6 +393,16 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
                     R.id.action_videogroup_play -> MediaUtils.openList(activity, selection.getAll(), 0)
                     R.id.action_videogroup_append -> MediaUtils.appendMedia(activity, selection.getAll())
                     R.id.action_videogroup_add_playlist -> lifecycleScope.launch { requireActivity().addToPlaylist(withContext(Dispatchers.Default) { selection.getAll() }) }
+                    R.id.action_group_similar -> lifecycleScope.launch { viewModel.groupSimilar(selection.getAll().first()) }
+                    R.id.action_ungroup -> viewModel.ungroup(selection.first() as VideoGroup)
+                    R.id.action_rename -> renameGroup(selection.first() as VideoGroup)
+                    R.id.action_add_to_group -> lifecycleScope.launch {
+                        if (selection.size > 1) {
+                            viewModel.createGroup(selection.getAll())?.let {
+                                activity?.open(it)
+                            }
+                        } else requireActivity().addToGroup(selection.getAll())
+                    }
                     else -> return false
                 }
             }
@@ -382,18 +418,18 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
     }
 
     fun updateSeenMediaMarker() {
-        videoListAdapter.setSeenMediaMarkerVisible(Settings.getInstance(requireContext()).getBoolean("media_seen", true))
+        videoListAdapter.setSeenMediaMarkerVisible(settings.getBoolean("media_seen", true))
         videoListAdapter.notifyItemRangeChanged(0, videoListAdapter.itemCount - 1, UPDATE_SEEN)
     }
 
-    override fun onCtxAction(position: Int, option: Int) {
+    override fun onCtxAction(position: Int, option: Long) {
         if (position >= videoListAdapter.itemCount) return
         val activity = activity ?: return
         when (val media = videoListAdapter.getItem(position)) {
             is MediaWrapper -> when (option) {
                 CTX_PLAY_FROM_START -> viewModel.playVideo(activity, media, position, true)
                 CTX_PLAY_AS_AUDIO -> viewModel.playAudio(activity, media)
-                CTX_PLAY_ALL -> MediaUtils.playAll(activity, viewModel.provider as VideosProvider, position, false)
+                CTX_PLAY_ALL -> viewModel.play(position)
                 CTX_INFORMATION -> showInfoDialog(media)
                 CTX_DELETE -> removeItem(media)
                 CTX_APPEND -> MediaUtils.appendMedia(activity, media)
@@ -408,18 +444,33 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
                     startActivity(intent)
                 }
                 CTX_SHARE -> lifecycleScope.launch { (requireActivity() as AppCompatActivity).share(media) }
+                CTX_REMOVE_GROUP -> viewModel.removeFromGroup(media)
+                CTX_ADD_GROUP -> requireActivity().addToGroup(listOf(media))
+                CTX_GROUP_SIMILAR -> lifecycleScope.launch { viewModel.groupSimilar(media) }
+
             }
             is Folder -> when (option) {
-                CTX_PLAY -> lifecycleScope.launch { viewModel.play(position) }
-                CTX_APPEND -> lifecycleScope.launch { viewModel.append(position) }
+                CTX_PLAY -> viewModel.play(position)
+                CTX_APPEND -> viewModel.append(position)
                 CTX_ADD_TO_PLAYLIST -> viewModel.addItemToPlaylist(requireActivity(), position)
             }
             is VideoGroup -> when (option) {
-                CTX_PLAY -> lifecycleScope.launch { viewModel.play(position) }
-                CTX_APPEND -> lifecycleScope.launch { viewModel.append(position) }
+                CTX_PLAY -> viewModel.play(position)
+                CTX_APPEND -> viewModel.append(position)
                 CTX_ADD_TO_PLAYLIST -> viewModel.addItemToPlaylist(requireActivity(), position)
+                CTX_RENAME_GROUP -> renameGroup(media)
+                CTX_UNGROUP -> viewModel.ungroup(media)
             }
         }
+    }
+
+    private fun renameGroup(media: VideoGroup) {
+        RenameDialog.newInstance(media) { newName ->
+            viewModel.renameGroup(media, newName)
+            (activity as? AppCompatActivity)?.run {
+                supportActionBar?.title = newName
+            }
+        }.show(requireActivity().supportFragmentManager, RenameDialog::class.simpleName)
     }
 
     private val thumbObs = Observer<MediaWrapper> { media ->
@@ -432,7 +483,7 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
         }
     }
 
-    private suspend fun VideoAction.process() {
+    private fun VideoAction.process() {
         when (this) {
             is VideoClick -> {
                 onClick(position, item)
@@ -442,11 +493,13 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
             }
             is VideoCtxClick -> {
                 when (item) {
-                    is Folder, is VideoGroup -> showContext(requireActivity(), this@VideoGridFragment, position, item.title, CTX_FOLDER_FLAGS)
+                    is Folder -> showContext(requireActivity(), this@VideoGridFragment, position, item.title, CTX_FOLDER_FLAGS)
+                    is VideoGroup -> showContext(requireActivity(), this@VideoGridFragment, position, item.title, CTX_FOLDER_FLAGS or CTX_RENAME_GROUP or CTX_UNGROUP)
                     is MediaWrapper -> {
                         val group = item.type == MediaWrapper.TYPE_GROUP
-                        var flags = if (group) CTX_VIDEO_GOUP_FLAGS else CTX_VIDEO_FLAGS
+                        var flags = if (group) CTX_VIDEO_GROUP_FLAGS else CTX_VIDEO_FLAGS
                         if (item.time != 0L && !group) flags = flags or CTX_PLAY_FROM_START
+                        if (viewModel.groupingType == VideoGroupingType.NAME || viewModel.group != null) flags = flags or if (viewModel.group != null) CTX_REMOVE_GROUP else flags or CTX_ADD_GROUP or CTX_GROUP_SIMILAR
                         showContext(requireActivity(), this@VideoGridFragment, position, item.getTitle(), flags)
                     }
                 }
@@ -466,7 +519,7 @@ class VideoGridFragment : MediaBrowserFragment<VideosViewModel>(), SwipeRefreshL
         if (actionMode == null) startActionMode()
     }
 
-    private suspend fun onClick(position: Int, item: MediaLibraryItem) {
+    private fun onClick(position: Int, item: MediaLibraryItem) {
         when (item) {
             is MediaWrapper -> {
                 if (actionMode != null) {

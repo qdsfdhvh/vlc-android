@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.videolan.medialibrary.MLServiceLocator;
 import org.videolan.medialibrary.Tools;
@@ -59,7 +60,10 @@ public class StubMedialibrary extends Medialibrary {
         return new String[0];
     }
 
-    public boolean addDevice(@NonNull String uuid, @NonNull String path, boolean removable) {
+    public void addDevice(@NonNull String uuid, @NonNull String path, boolean removable) { }
+
+    @Override
+    public boolean isDeviceKnown(@NonNull String uuid, @NonNull String path, boolean removable) {
         return false;
     }
 
@@ -141,12 +145,32 @@ public class StubMedialibrary extends Medialibrary {
     }
 
     @Override
-    public int getVideoGroupsCount() {
+    public int getVideoGroupsCount(@Nullable String query) {
         return 0;
     }
 
     @Override
     public void setVideoGroupsPrefixLength(int lenght) {}
+
+    @Override
+    public VideoGroup createVideoGroup(String name) {
+        return null;
+    }
+
+    @Override
+    public VideoGroup createVideoGroup(long[] ids) {
+        return null;
+    }
+
+    @Override
+    public boolean regroupAll() {
+        return false;
+    }
+
+    @Override
+    public boolean regroup(long mediaId) {
+        return false;
+    }
 
     public Album[] getAlbums() {
         return getAlbums(SORT_DEFAULT, false);
@@ -605,6 +629,21 @@ public class StubMedialibrary extends Medialibrary {
     public Playlist[] searchPlaylist(String query, int sort, boolean desc, int nbItems, int offset) {
         ArrayList<Playlist> results = new ArrayList<>(Arrays.asList(searchPlaylist(query)));
         return dt.sortPlaylist(dt.secureSublist(results, offset, offset + nbItems), sort, desc);
+    }
+
+    @Override
+    public Folder[] searchFolders(String query, int sort, boolean desc, int nbItems, int offset) {
+        return new Folder[0];
+    }
+
+    @Override
+    public int getFoldersCount(String query) {
+        return 0;
+    }
+
+    @Override
+    public VideoGroup[] searchVideoGroups(String query, int sort, boolean desc, int nbItems, int offset) {
+        return new VideoGroup[0];
     }
 
     private boolean isParentFolder(String parentMrl, String childMrl) {

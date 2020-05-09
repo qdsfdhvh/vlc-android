@@ -1640,7 +1640,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
 
     open fun onAudioSubClick(anchor: View?) {
         service?.let { service ->
-            var flags = 0
+            var flags = 0L
             if (enableSubs) {
                 flags = flags or CTX_DOWNLOAD_SUBTITLES_PLAYER
                 if (displayManager.isPrimary) flags = flags or CTX_PICK_SUBS
@@ -2093,7 +2093,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
     internal fun hideOverlay(fromUser: Boolean) {
         if (isShowing) {
             handler.removeMessages(FADE_OUT)
-            Log.i(TAG, "remove View!")
+            Log.v(TAG, "remove View!")
             overlayTips.setInvisible()
             if (!displayManager.isPrimary) {
                 overlayBackground?.startAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_out))
@@ -2303,7 +2303,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
             val continueplayback = isPlaying && (restorePlayback || positionInPlaylist == service.currentMediaPosition)
             if (resumePlaylist) {
                 // Provided externally from AudioService
-                if (BuildConfig.DEBUG) Log.d(TAG, "Continuing playback from PlaybackService at index $positionInPlaylist")
+                if (BuildConfig.DEBUG) Log.v(TAG, "Continuing playback from PlaybackService at index $positionInPlaylist")
                 openedMedia = service.media[positionInPlaylist]
                 itemTitle = openedMedia.title
                 updateSeekable(service.isSeekable)
@@ -2351,7 +2351,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                                     showConfirmResumeDialog()
                                     return
                                 } else {
-                                    settings.putSingle(VIDEO_RESUME_TIME, -1)
+                                    settings.putSingle(VIDEO_RESUME_TIME, -1L)
                                     startTime = rTime
                                 }
                             }
@@ -2607,11 +2607,11 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
 
     private fun updateNavStatus() {
         if (service == null) return
-        isNavMenu = false
         menuIdx = -1
         lifecycleScope.launchWhenStarted {
             val titles = withContext(Dispatchers.IO) { service?.titles }
             if (isFinishing) return@launchWhenStarted
+            isNavMenu = false
             if (titles != null) {
                 val currentIdx = service?.titleIdx ?: return@launchWhenStarted
                 for (i in titles.indices) {
@@ -2621,7 +2621,10 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                         break
                     }
                 }
-                isNavMenu = menuIdx == currentIdx
+                val interactive = service?.mediaplayer?.let {
+                    it.titles[it.title].isInteractive
+                } ?: false
+                isNavMenu = menuIdx == currentIdx || interactive
             }
 
             if (isNavMenu) {

@@ -31,20 +31,19 @@ import android.view.View
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.launch
 import org.videolan.libvlc.Dialog
 import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.resources.CTX_FAV_ADD
-import org.videolan.resources.CTX_FAV_EDIT
 import org.videolan.tools.NetworkMonitor
 import org.videolan.tools.isStarted
-import org.videolan.vlc.ExternalMonitor
 import org.videolan.vlc.R
-import org.videolan.vlc.gui.dialogs.NetworkServerDialog
-import org.videolan.vlc.gui.dialogs.VlcLoginDialog
 import org.videolan.vlc.gui.view.EmptyLoadingState
-import org.videolan.vlc.util.*
-import org.videolan.vlc.viewmodels.browser.NetworkModel
+import org.videolan.vlc.util.DialogDelegate
+import org.videolan.vlc.util.IDialogManager
+import org.videolan.vlc.util.showVlcDialog
 import org.videolan.vlc.viewmodels.browser.TYPE_NETWORK
 import org.videolan.vlc.viewmodels.browser.getBrowserModel
 
@@ -76,6 +75,11 @@ class NetworkBrowserFragment : BaseBrowserFragment(), IDialogManager {
         inflater.inflate(R.menu.fragment_option_network, menu)
         super.onCreateOptionsMenu(menu, inflater)
     }
+
+    override fun containerActivity() = requireActivity()
+
+    override val isNetwork = true
+    override val isFile = false
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
@@ -120,11 +124,10 @@ class NetworkBrowserFragment : BaseBrowserFragment(), IDialogManager {
         }
     }
 
-    override fun onCtxAction(position: Int, option: Int) {
+    override fun onCtxAction(position: Int, option: Long) {
         val mw = this.adapter.getItem(position) as MediaWrapper
         when (option) {
             CTX_FAV_ADD -> lifecycleScope.launch { browserFavRepository.addNetworkFavItem(mw.uri, mw.title, mw.artworkURL) }
-            CTX_FAV_EDIT -> showAddServerDialog(mw)
             else -> super.onCtxAction(position, option)
         }
     }
@@ -166,23 +169,5 @@ class NetworkBrowserFragment : BaseBrowserFragment(), IDialogManager {
             binding.networkList.visibility = View.GONE
             binding.showFavorites = false
         }
-    }
-
-    override fun onClick(v: View) {
-        if (!isRootDirectory)
-            super.onClick(v)
-        else if (v.id == R.id.fab) showAddServerDialog(null)
-    }
-
-    private fun showAddServerDialog(mw: MediaWrapper?) {
-        val fm = fragmentManager ?: return
-        val dialog = NetworkServerDialog()
-        mw?.let { dialog.setServer(it) }
-        dialog.show(fm, "fragment_add_server")
-    }
-
-    override fun onUpdateFinished(adapter: RecyclerView.Adapter<*>) {
-        super.onUpdateFinished(adapter)
-        if (isRootDirectory && isStarted()) fabPlay?.show()
     }
 }

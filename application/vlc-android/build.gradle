@@ -12,18 +12,6 @@ android {
     dataBinding {
         enabled = true
     }
-
-    task luaPlaylistCopy(type: Copy) {
-        from '../vlc/share/lua/playlist'
-        into 'assets/lua/playlist'
-        exclude '**/*.txt'
-    }
-
-    task luaMetaCopy(type: Copy) {
-        from '../vlc/share/lua/meta'
-        into 'assets/lua/meta'
-        exclude '**/*.txt'
-    }
     
     packagingOptions {
         pickFirst '**/*.so'
@@ -48,13 +36,6 @@ android {
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
         vectorDrawables.useSupportLibrary = true
-
-        tasks.whenTaskAdded { task ->
-            if (task.name.startsWith('merge')) {
-                task.dependsOn luaPlaylistCopy
-                task.dependsOn luaMetaCopy
-            }
-        }
 
         javaCompileOptions {
             annotationProcessorOptions {
@@ -84,10 +65,13 @@ android {
         release {
             proguardFile 'proguard.cfg'
             buildConfigField "boolean", "BETA", isBeta()
+            resValue 'string', 'benchmark_package_name', 'org.videolan.vlcbenchmark'
         }
         debug {
             buildConfigField "boolean", "BETA", "false"
+            resValue 'string', 'benchmark_package_name', 'org.videolan.vlcbenchmark.debug'
             buildConfigField "String", "APP_ID", "\"${rootProject.ext.appId}.debug\""
+            resValue 'string', 'tv_provider_authority', "\"${rootProject.ext.appId}\".debug.tv"
             multiDexEnabled true
         }
         signedRelease {
@@ -220,7 +204,7 @@ dependencies {
     testApi "org.powermock:powermock-module-junit4:$rootProject.ext.powerMock"
     testApi "com.jraska.livedata:testing-ktx:$rootProject.ext.livedataTest"
     testApi "org.robolectric:robolectric:$rootProject.ext.robolectric"
-    androidTestApi 'androidx.test:rules:1.3.0-alpha03'
+    androidTestApi 'androidx.test:rules:1.3.0-alpha05'
 }
 
 

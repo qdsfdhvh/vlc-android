@@ -41,10 +41,8 @@ import org.videolan.vlc.ExternalMonitor
 import org.videolan.vlc.R
 import org.videolan.vlc.gui.helpers.hf.StoragePermissionsDelegate
 import org.videolan.vlc.gui.helpers.hf.getDocumentFiles
-import org.videolan.vlc.repository.BrowserFavRepository
 import org.videolan.vlc.repository.DirectoryRepository
 import org.videolan.vlc.util.FileUtils
-import org.videolan.vlc.util.convertFavorites
 import java.io.File
 
 @ObsoleteCoroutinesApi
@@ -59,39 +57,6 @@ open class FileBrowserProvider(
 
     private var storagePosition = -1
     private var otgPosition = -1
-    @Suppress("LeakingThis")
-    private val showFavorites = url == null && !filePicker && this !is StorageProvider
-    private val favorites = if (url == null && !filePicker) BrowserFavRepository.getInstance(context).localFavorites else null
-
-    private val favoritesObserver by lazy {
-        Observer<List<org.videolan.vlc.mediadb.models.BrowserFav>> {
-        val favs = convertFavorites(it)
-        val data = dataset.value.toMutableList()
-        if (data.size > 1) {
-            data.listIterator(1).run {
-                while (hasNext()) {
-                    val item = next()
-                    if (item.hasStateFlags(MediaLibraryItem.FLAG_FAVORITE) || item is DummyItem) remove()
-                }
-            }
-        }
-        launch {
-            if (favs.isNotEmpty()) {
-                val position = data.size
-                var favAdded = false
-                for (fav in favs) if (File(fav.uri.path).exists()) {
-                    favAdded = true
-                    data.add(fav)
-                }
-                if (favAdded) {
-                    val quickAccess = context.getString(R.string.browser_quick_access)
-                    data.add(position, DummyItem(quickAccess))
-                }
-            }
-            dataset.value = data
-            parseSubDirectories()
-        }
-    } }
 
     init {
         fetch()
@@ -139,7 +104,6 @@ open class FileBrowserProvider(
         dataset.value = devices
         // observe devices & favorites
         ExternalMonitor.devices.observeForever(this@FileBrowserProvider)
-        if (showFavorites) favorites?.observeForever(favoritesObserver)
         loading.postValue(false)
         //no headers in root
         headers.clear()
@@ -193,7 +157,6 @@ open class FileBrowserProvider(
     override fun release() {
         if (url == null) {
             ExternalMonitor.devices.removeObserver(this)
-            if (showFavorites) favorites?.removeObserver(favoritesObserver)
             if (this::storageObserver.isInitialized) {
                 StoragePermissionsDelegate.storageAccessGranted.removeObserver(storageObserver)
             }

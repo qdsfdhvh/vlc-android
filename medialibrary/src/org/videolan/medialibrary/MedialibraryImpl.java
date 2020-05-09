@@ -117,15 +117,17 @@ public class MedialibraryImpl extends Medialibrary {
         return mIsInitiated ? nativeDevices() : new String[0];
     }
 
-    public boolean addDevice(@NonNull String uuid, @NonNull String path, boolean removable) {
-        if (!mIsInitiated) return false;
-        final boolean added = nativeAddDevice(VLCUtil.encodeVLCString(uuid), Tools.encodeVLCMrl(path), removable);
+    public boolean isDeviceKnown(@NonNull String uuid, @NonNull String path, boolean removable) {
+        return mIsInitiated && nativeIsDeviceKnown(VLCUtil.encodeVLCString(uuid), Tools.encodeVLCMrl(path), removable);
+    }
+
+    public void addDevice(@NonNull String uuid, @NonNull String path, boolean removable) {
+        if (!mIsInitiated) return;
+        nativeAddDevice(VLCUtil.encodeVLCString(uuid), Tools.encodeVLCMrl(path), removable);
         synchronized (onDeviceChangeListeners) {
             for (OnDeviceChangeListener listener : onDeviceChangeListeners) listener.onDeviceChange();
         }
-        return added;
     }
-
     public void discover(@NonNull String path) {
         if (mIsInitiated) nativeDiscover(Tools.encodeVLCMrl(path));
     }
@@ -218,14 +220,36 @@ public class MedialibraryImpl extends Medialibrary {
 
     @Override
     @WorkerThread
-    public int getVideoGroupsCount() {
-        return mIsInitiated ? nativeGetVideoGroupsCount() : 0;
+    public int getVideoGroupsCount(@Nullable String query) {
+        return mIsInitiated ? nativeGetVideoGroupsCount(query) : 0;
     }
 
     @Override
     @WorkerThread
     public void setVideoGroupsPrefixLength(int lenght) {
         if (mIsInitiated) nativeSetVideoGroupsPrefixLength(lenght);
+    }
+
+    @Override
+    @WorkerThread
+    public VideoGroup createVideoGroup(String name) {
+        return mIsInitiated && !TextUtils.isEmpty(name) ? nativeCreateGroupByName(name) : null;
+    }
+
+    @Override
+    @WorkerThread
+    public VideoGroup createVideoGroup(long[] ids) {
+        return mIsInitiated && (ids.length != 0) ? nativeCreateGroup(ids) : null;
+    }
+
+    @Override
+    public boolean regroupAll() {
+        return mIsInitiated && nativeRegroupAll();
+    }
+
+
+    public boolean regroup(long mediaId) {
+        return mIsInitiated && mediaId > 0 && nativeRegroup(mediaId);
     }
 
 
@@ -527,6 +551,21 @@ public class MedialibraryImpl extends Medialibrary {
         return mIsInitiated && !TextUtils.isEmpty(query) ? nativeSearchPagedPlaylist(query, sort, desc, nbItems, offset) : null;
     }
 
+    @Override
+    public Folder[] searchFolders(String query, int sort, boolean desc, int nbItems, int offset) {
+        return mIsInitiated && !TextUtils.isEmpty(query) ? nativeSearchPagedFolders(query, sort, desc, nbItems, offset) : new Folder[0];
+    }
+
+    @Override
+    public int getFoldersCount(String query) {
+        return mIsInitiated ? nativeGetSearchFoldersCount(query) : 0;
+    }
+
+    @Override
+    public VideoGroup[] searchVideoGroups(String query, int sort, boolean desc, int nbItems, int offset) {
+        return mIsInitiated && !TextUtils.isEmpty(query) ? nativeSearchPagedGroups(query, sort, desc, nbItems, offset) : new VideoGroup[0];
+    }
+
     // Native methods
     private native int nativeInit(String dbPath, String thumbsPath);
     private native void nativeStart();
@@ -535,7 +574,8 @@ public class MedialibraryImpl extends Medialibrary {
     private native void nativeClearDatabase(boolean keepPlaylist);
     private native void nativeBanFolder(String path);
     private native void nativeUnbanFolder(String path);
-    private native boolean nativeAddDevice(String uuid, String path, boolean removable);
+    private native void nativeAddDevice(String uuid, String path, boolean removable);
+    private native boolean nativeIsDeviceKnown(String uuid, String path, boolean removable);
     private native String[] nativeDevices();
     private native void nativeDiscover(String path);
     private native void nativeRemoveEntryPoint(String path);
@@ -561,8 +601,16 @@ public class MedialibraryImpl extends Medialibrary {
     private native int nativeGetVideoCount();
     private native int nativeGetAudioCount();
     private native VideoGroup[] nativeGetVideoGroups(int sort, boolean desc, int nbItems, int offset);
-    private native int nativeGetVideoGroupsCount();
+    private native int nativeGetVideoGroupsCount(String query);
     private native void nativeSetVideoGroupsPrefixLength(int length);
+
+    private native VideoGroup nativeCreateGroupByName(String name);
+
+    private native VideoGroup nativeCreateGroup(long[] ids);
+
+    private native boolean nativeRegroupAll();
+
+    private native boolean nativeRegroup(long mediaId);
     private native Album[] nativeGetAlbums(int sort, boolean desc);
     private native Album[] nativeGetPagedAlbums(int sort, boolean desc, int nbItems, int offset);
     private native int nativeGetAlbumsCount();
@@ -611,5 +659,8 @@ public class MedialibraryImpl extends Medialibrary {
     private native Playlist[] nativeSearchPlaylist(String query);
     private native Playlist[] nativeSearchPagedPlaylist(String query, int sort, boolean desc, int nbItems, int offset);
     private native int nativeGetPlaylistSearchCount(String query);
+    private native Folder[] nativeSearchPagedFolders(String query, int sort, boolean desc, int nbItems, int offset);
+    private native int nativeGetSearchFoldersCount(String query);
+    private native VideoGroup[] nativeSearchPagedGroups(String query, int sort, boolean desc, int nbItems, int offset);
     private native void nativeRequestThumbnail(long mediaId);
 }

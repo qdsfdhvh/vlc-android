@@ -44,7 +44,7 @@ abstract class MedialibraryProvider<T : MediaLibraryItem>(val context: Context, 
     private lateinit var dataSource : DataSource<Int, T>
     val loading = MutableLiveData<Boolean>().apply { value = true }
     private var refreshDeferred : CompletableDeferred<Unit>? = null
-    var isRefreshing = medialibrary.isWorking
+    var isRefreshing = true
         private set(value) {
             refreshDeferred = if (value) CompletableDeferred()
             else {
@@ -71,7 +71,7 @@ abstract class MedialibraryProvider<T : MediaLibraryItem>(val context: Context, 
 
     abstract fun getTotalCount(): Int
     abstract fun getPage(loadSize: Int, startposition: Int): Array<T>
-    abstract fun getAll(): Array<T>
+    abstract fun getAll(): Array<out T>
 
     override fun sort(sort: Int) {
         if (canSortBy(sort)) {
@@ -95,7 +95,7 @@ abstract class MedialibraryProvider<T : MediaLibraryItem>(val context: Context, 
     }
 
     fun refresh(): Boolean {
-        if (isRefreshing || !medialibrary.isStarted || !this::dataSource.isInitialized) return false
+        if (medialibrary.isWorking || !medialibrary.isStarted || !this::dataSource.isInitialized) return false
         privateHeaders.clear()
         if (!dataSource.isInvalid) {
             isRefreshing = true
@@ -128,7 +128,7 @@ abstract class MedialibraryProvider<T : MediaLibraryItem>(val context: Context, 
             try {
                 callback.onResult(page.toList(), params.requestedStartPosition, count)
             } catch (e: IllegalArgumentException) {}
-            isRefreshing = false
+            isRefreshing = !medialibrary.isStarted
         }
 
         override fun loadRange(params: LoadRangeParams, callback: LoadRangeCallback<T>) {

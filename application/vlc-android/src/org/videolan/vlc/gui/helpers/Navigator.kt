@@ -27,22 +27,15 @@ import android.content.*
 import android.os.Bundle
 import android.os.IBinder
 import android.view.MenuItem
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.lifecycleScope
-import com.google.android.material.navigation.NavigationView
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.delay
 import org.videolan.resources.*
-import org.videolan.tools.PLAYBACK_HISTORY
 import org.videolan.tools.Settings
 import org.videolan.tools.isStarted
 import org.videolan.tools.putSingle
@@ -51,26 +44,20 @@ import org.videolan.vlc.R
 import org.videolan.vlc.extensions.ExtensionManagerService
 import org.videolan.vlc.extensions.ExtensionsManager
 import org.videolan.vlc.extensions.api.VLCExtensionItem
-import org.videolan.vlc.gui.HistoryFragment
-import org.videolan.vlc.gui.MainActivity
-import org.videolan.vlc.gui.PlaylistFragment
-import org.videolan.vlc.gui.SecondaryActivity
+import org.videolan.vlc.gui.*
 import org.videolan.vlc.gui.audio.AudioBrowserFragment
 import org.videolan.vlc.gui.browser.BaseBrowserFragment
 import org.videolan.vlc.gui.browser.ExtensionBrowser
-import org.videolan.vlc.gui.browser.FileBrowserFragment
+import org.videolan.vlc.gui.browser.MainBrowserFragment
 import org.videolan.vlc.gui.browser.NetworkBrowserFragment
-import org.videolan.vlc.gui.network.MRLPanelFragment
 import org.videolan.vlc.gui.preferences.PreferencesActivity
 import org.videolan.vlc.gui.video.VideoGridFragment
-import org.videolan.vlc.gui.view.HackyDrawerLayout
-import org.videolan.vlc.util.*
 import org.videolan.vlc.viewmodels.mobile.VideoGroupingType
 
 private const val TAG = "Navigator"
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
-class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObserver, INavigator {
+class Navigator : BottomNavigationView.OnNavigationItemSelectedListener, LifecycleObserver, INavigator {
 
     private val defaultFragmentId= R.id.nav_video
     override var currentFragmentId : Int = 0
@@ -79,9 +66,7 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
     private lateinit var activity: MainActivity
     private lateinit var settings: SharedPreferences
     private var extensionsService: ExtensionManagerService? = null
-    override lateinit var navigationView: NavigationView
-    override lateinit var drawerLayout: HackyDrawerLayout
-    override lateinit var drawerToggle: ActionBarDrawerToggle
+    override lateinit var navigationView: BottomNavigationView
 
     override lateinit var extensionsManager: ExtensionsManager
     override var extensionServiceConnection: ServiceConnection? = null
@@ -95,47 +80,21 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
         currentFragmentId = intent.getIntExtra(EXTRA_TARGET, 0)
         if (state !== null) {
             currentFragment = supportFragmentManager.getFragment(state, "current_fragment")
-        } else {
-            if (intent.getBooleanExtra(EXTRA_UPGRADE, false)) {
-                /*
-                 * The sliding menu is automatically opened when the user closes
-                 * the info dialog. If (for any reason) the dialog is not shown,
-                 * open the menu after a short delay.
-                 */
-                lifecycleScope.launchWhenStarted {
-                    delay(500L)
-                    drawerLayout.openDrawer(navigationView)
-                }
-            }
         }
         lifecycle.addObserver(this@Navigator)
         navigationView = findViewById(R.id.navigation)
-        navigationView.menu.findItem(R.id.nav_history).isVisible = settings.getBoolean(PLAYBACK_HISTORY, true)
-        drawerLayout = findViewById(R.id.root_container)
-
-        drawerToggle = ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close)
-        drawerLayout.addDrawerListener(drawerToggle)
-        drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START)
-
-        val headerView = navigationView.getHeaderView(0)
-        if (BuildConfig.DEBUG) {
-            headerView.findViewById<TextView>(R.id.nav_header_title).text = "${getString(R.string.app_name)} - ${BuildConfig.VERSION_NAME}"
-        }
-        headerView.findViewById<ImageView>(R.id.nav_header_background).setOnClickListener {
-            showSecondaryFragment(SecondaryActivity.ABOUT)
-        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onStart() {
         if (currentFragment === null && !currentIdIsExtension()) showFragment(if (currentFragmentId != 0) currentFragmentId else settings.getInt("fragment_id", defaultFragmentId))
-        navigationView.setNavigationItemSelectedListener(this)
+        navigationView.setOnNavigationItemSelectedListener(this)
         if (BuildConfig.DEBUG) createExtensionServiceConnection()
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onStop() {
-        navigationView.setNavigationItemSelectedListener(null)
+        navigationView.setOnNavigationItemSelectedListener(null)
         if (isExtensionServiceBinded) {
             activity.unbindService(extensionServiceConnection!!)
             extensionServiceConnection = null
@@ -149,13 +108,12 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
     private fun getNewFragment(id: Int): Fragment {
         return when (id) {
             R.id.nav_audio -> AudioBrowserFragment()
-            R.id.nav_directories -> FileBrowserFragment()
+            R.id.nav_directories -> MainBrowserFragment()
             R.id.nav_playlists -> PlaylistFragment()
-            R.id.nav_history -> HistoryFragment()
             R.id.nav_network -> NetworkBrowserFragment()
-            R.id.nav_mrl -> MRLPanelFragment()
+            R.id.nav_more -> MoreFragment()
             else -> {
-                val group = Integer.valueOf(Settings.getInstance(activity.applicationContext).getString("video_min_group_length", "-1")!!)
+                val group = Integer.valueOf(Settings.getInstance(activity.applicationContext).getString("video_min_group_length", "1")!!)
                 when {
                     group > 0 -> VideoGridFragment().apply {
                         arguments = Bundle(1).apply {
@@ -217,10 +175,6 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
         currentFragmentId = settings.getInt("fragment_id", defaultFragmentId)
     }
 
-    override fun closeDrawer() {
-        drawerLayout.closeDrawer(navigationView)
-    }
-
     private fun getTag(id: Int) = when (id) {
         R.id.nav_settings -> ID_PREFERENCES
         R.id.nav_audio -> ID_AUDIO
@@ -238,7 +192,6 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
         if (item.groupId == R.id.extensions_group) {
             if (currentFragmentId == id) {
                 clearBackstackFromClass(ExtensionBrowser::class.java)
-                activity.closeDrawer()
                 return false
             } else
                 extensionsService?.openExtension(id)
@@ -246,16 +199,15 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
             if (isExtensionServiceBinded) extensionsService?.disconnect()
 
             if (current == null) {
-                activity.closeDrawer()
                 return false
             }
+            if (current is BaseFragment && current.actionMode != null) current.stopActionMode()
 
             if (currentFragmentId == id) { /* Already selected */
                 // Go back at root level of current mProvider
                 if ((current as? BaseBrowserFragment)?.isStarted() == false) {
                     activity.supportFragmentManager.popBackStackImmediate("root", FragmentManager.POP_BACK_STACK_INCLUSIVE)
                 } else {
-                    activity.closeDrawer()
                     return false
                 }
             } else when (id) {
@@ -266,7 +218,6 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
                 }
             }
         }
-        activity.closeDrawer()
         return true
     }
 
@@ -302,7 +253,7 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
             else -> {
                 val currentId = currentFragmentId
                 val target = navigationView.menu.findItem(id)
-                if (id != currentId && target != null) {
+                if (id != navigationView.selectedItemId && target != null) {
                     val current = navigationView.menu.findItem(currentId)
                     if (current != null) current.isChecked = false
                     target.isChecked = true
@@ -321,20 +272,22 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
             extensionManagerService?.stopSelf()
             return
         }
-        val extensionGroup = navigationView.menu.findItem(R.id.extensions_group)
-        extensionGroup.subMenu.clear()
-        for (id in plugins.indices) {
-            val extension = plugins[id]
-            val key = "extension_" + extension.componentName().packageName
-            if (settings.contains(key)) {
-                extensionsManager.displayPlugin(activity, id, extension, settings.getBoolean(key, false))
-            } else {
-                extensionsManager.showExtensionPermissionDialog(activity, id, extension, key)
-            }
-        }
-        if (extensionGroup.subMenu.size() == 0) extensionGroup.isVisible = false
-        onPluginsLoaded()
-        navigationView.invalidate()
+       navigationView.menu.findItem(R.id.extensions_group)?.let { extensionGroup->
+           extensionGroup.subMenu.clear()
+           for (id in plugins.indices) {
+               val extension = plugins[id]
+               val key = "extension_" + extension.componentName().packageName
+               if (settings.contains(key)) {
+                   extensionsManager.displayPlugin(activity, id, extension, settings.getBoolean(key, false))
+               } else {
+                   extensionsManager.showExtensionPermissionDialog(activity, id, extension, key)
+               }
+           }
+           if (extensionGroup.subMenu.size() == 0) extensionGroup.isVisible = false
+           onPluginsLoaded()
+           navigationView.invalidate()
+       }
+
     }
 
     private fun onPluginsLoaded() {
@@ -364,11 +317,9 @@ class Navigator: NavigationView.OnNavigationItemSelectedListener, LifecycleObser
 }
 
 interface INavigator {
-    var navigationView: NavigationView
+    var navigationView: BottomNavigationView
     var currentFragmentId : Int
 
-    var drawerLayout: HackyDrawerLayout
-    var drawerToggle: ActionBarDrawerToggle
 
     var extensionsManager: ExtensionsManager
     var extensionServiceConnection: ServiceConnection?
@@ -378,6 +329,5 @@ interface INavigator {
     fun currentIdIsExtension() : Boolean
     fun displayExtensionItems(extensionId: Int, title: String, items: List<VLCExtensionItem>, showParams: Boolean, refresh: Boolean)
     fun reloadPreferences()
-    fun closeDrawer()
     fun forceLoadVideoFragment()
 }

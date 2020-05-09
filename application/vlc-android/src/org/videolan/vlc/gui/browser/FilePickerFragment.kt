@@ -39,13 +39,15 @@ import org.videolan.medialibrary.media.MediaLibraryItem
 import org.videolan.resources.AndroidDevices
 import org.videolan.tools.removeFileProtocole
 import org.videolan.vlc.R
+import org.videolan.vlc.gui.ContentActivity
 import org.videolan.vlc.repository.DirectoryRepository
 import org.videolan.vlc.util.FileUtils
 import org.videolan.vlc.viewmodels.browser.BrowserModel
 import org.videolan.vlc.viewmodels.browser.TYPE_PICKER
 
 const val EXTRA_MRL = "sub_mrl"
-class FilePickerFragment : FileBrowserFragment() {
+
+class FilePickerFragment : FileBrowserFragment(), BrowserContainer<MediaLibraryItem> {
 
     override fun createFragment(): Fragment {
         return FilePickerFragment()
@@ -71,7 +73,7 @@ class FilePickerFragment : FileBrowserFragment() {
 
     override fun onStart() {
         super.onStart()
-        activity?.title = getTitle()
+        if (activity !is ContentActivity || (activity as ContentActivity).displayTitle) activity?.title = getTitle()
         swipeRefreshLayout.isEnabled = false
     }
 
@@ -114,4 +116,9 @@ class FilePickerFragment : FileBrowserFragment() {
             return true
         } else length < 7
     } ?: true
+
+    override fun containerActivity() = requireActivity()
+
+    override val isNetwork = false
+    override val isFile = true
 }

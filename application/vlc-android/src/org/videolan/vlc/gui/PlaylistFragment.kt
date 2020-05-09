@@ -103,10 +103,10 @@ class PlaylistFragment : BaseAudioBrowser<PlaylistsViewModel>(), SwipeRefreshLay
         super.onActivityCreated(savedInstanceState)
         viewModel.provider.pagedList.observe(requireActivity(), Observer {
             playlistAdapter.submitList(it as PagedList<MediaLibraryItem>)
+            binding.empty.visibility = if (it.isEmpty())View.VISIBLE else View.GONE
         })
-        viewModel.provider.loading.observe(requireActivity(), Observer<Boolean> { loading ->
-            setRefreshing(loading)
-            if (!loading) binding.empty.visibility = if (empty) View.VISIBLE else View.GONE
+        viewModel.provider.loading.observe(requireActivity(), Observer { loading ->
+            setRefreshing(loading) {  }
         })
 
         fastScroller.setRecyclerView(getCurrentRV(), viewModel.provider)
@@ -166,7 +166,7 @@ class PlaylistFragment : BaseAudioBrowser<PlaylistsViewModel>(), SwipeRefreshLay
         } else super.onClick(v, position, item)
     }
 
-    override fun onCtxAction(position: Int, option: Int) {
+    override fun onCtxAction(position: Int, option: Long) {
         if (option == CTX_PLAY_ALL) MediaUtils.playAll(activity, viewModel.provider as MedialibraryProvider<MediaWrapper>, position, false)
         else super.onCtxAction(position, option)
     }

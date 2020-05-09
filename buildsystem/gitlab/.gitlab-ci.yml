@@ -9,8 +9,8 @@ cache:
 .build-all-base:
     image: registry.videolan.org/vlc-debian-android:20200311171937
     tags:
-        - debian 
         - amd64
+        - docker
     stage: build
     script:
         - ./buildsystem/compile.sh ${EXTRA_BUILD_PARAM} -a ${ARCH}
@@ -22,7 +22,7 @@ cache:
     extends: .build-all-base
     only:
         refs:
-            - master
+            - master@videolan/vlc-android
             - merge_requests
         changes:
             # For build script, we rely on the .build-ml-base config
@@ -39,7 +39,7 @@ cache:
     extends: .build-all-base
     only:
         refs:
-            - master
+            - master@videolan/vlc-android
             - merge_requests
         changes:
             - medialibrary/**/*
@@ -57,7 +57,7 @@ continuous-app-build:
         - ./gradlew assembleDebug
     only:
         refs:
-            - master
+            - master@videolan/vlc-android
             - merge_requests
         changes:
             - "**/*"
@@ -185,6 +185,7 @@ release:
     except:
         - branches
     script:
+        - ./buildsystem/compile.sh --init
         - ./gradlew assembleRelease
     artifacts:
         name: "${CI_COMMIT_TAG}"

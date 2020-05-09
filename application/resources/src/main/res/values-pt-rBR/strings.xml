@@ -212,7 +212,7 @@
     <string name="favorite_removed">Excluído dos favoritos</string>
 
     <string name="open">Abrir</string>
-    <string name="open_mrl">Fluxo</string>
+    <string name="streams">Fluxos</string>
     <string name="open_mrl_dialog_title">Abrir fluxo de rede</string>
     <string name="open_mrl_dialog_msg">Digite o endereço de rede: Ex.: http://, mms:// ou rtsp://</string>
     <string name="error_not_compatible">Desculpe, não há suporte do VLC para Android™ para o seu dispositivo.</string>
@@ -699,8 +699,14 @@
     <string name="preamp">Pré amplificador</string>
     <string name="presets">Padrões</string>
     <string name="reset">Restaurar</string>
-    <string name="appended">Trilha(s) adicionada(s)</string>
-    <string name="inserted">Trilha(s) incluída(s)</string>
+    <plurals name="tracks_inserted">
+        <item quantity="one">%d Trilha incluída</item>
+        <item quantity="other">%d Trilhas incluídas</item>
+    </plurals>
+    <plurals name="tracks_appended">
+        <item quantity="one">%d Trilhas adicionadas</item>
+        <item quantity="other">%d Tracks adicionadas</item>
+    </plurals>
     <string name="remove_current">Excluir atual</string>
     <string name="validation_delete_playlist">Tem certeza que deseja excluir esta lista de reprodução?</string>
     <string name="validation_delete_playlist_text">Esta ação não pode ser desfeita.</string>
@@ -793,4 +799,8 @@
     <string name="all_subfolders">Adicionar esta pasta e suas subpastas</string>
     <string name="playlist_existing">A lsta de reprodução %s já existe</string>
     <string name="new_title">Novo título</string>
+    <string name="browse">Procurar</string>
+    <string name="more">Mais</string>
+    <string name="favorites">Favoritos</string>
+    <string name="new_stream">Novo fluxo</string>
 </resources>

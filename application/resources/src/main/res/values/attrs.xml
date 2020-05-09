@@ -26,13 +26,15 @@
 
     <attr name="item_footer" format="reference|color" />
     <attr name="background_default" format="reference|color" />
-    <attr name="background_default_gradient" format="reference|color" />
+    <attr name="header_background" format="reference|color" />
+    <attr name="bottom_navigation_background" format="reference|color" />
+    <attr name="bottom_sheet_background" format="reference|color" />
+    <attr name="bottom_navigation_color" format="reference|color" />
     <attr name="background_default_darker" format="reference|color" />
     <attr name="background_actionbar" format="reference|color" />
     <attr name="background_menu_divider" format="reference|color" />
     <attr name="background_menu" format="reference|color" />
     <attr name="background_menu_selected" format="reference|color" />
-    <attr name="background_header" format="reference|color" />
     <attr name="background_player" format="reference|color" />
     <attr name="background_audio_tips" format="reference|color" />
     <attr name="font_default" format="reference|color" />
@@ -60,6 +62,7 @@
     <attr name="card_background" format="color"/>
     <attr name="empty_button" format="reference" />
     <attr name="default_separator" format="color" />
+    <attr name="card_border" format="color" />
 
     <!--Main Icons-->
     <attr name="ic_down_style" format="reference" />
@@ -67,7 +70,6 @@
     <attr name="ic_playlist" format="reference" />
     <attr name="ic_playlist_on" format="reference" />
     <attr name="ic_menu_search" format="reference" />
-    <attr name="ic_audio_player_more" format="reference" />
     <attr name="ic_previous" format="reference" />
     <attr name="ic_next" format="reference" />
     <attr name="ic_close" format="reference" />
@@ -116,6 +118,12 @@
     <declare-styleable name="EmptyLoadingStateView">
         <attr name="empty_text" format="reference|string" />
         <attr name="show_no_media" format="boolean" />
+        <attr name="compact_mode" format="boolean" />
+    </declare-styleable>
+    <declare-styleable name="TitleListView">
+        <attr name="title" format="reference|string" />
+        <attr name="show_button" format="boolean" />
+        <attr name="button_icon" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="HalfCircleView">

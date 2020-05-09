@@ -54,7 +54,7 @@ class VideosViewModel(context: Context, type: VideoGroupingType, val folder: Fol
     var provider = loadProvider()
         private set
 
-    private fun loadProvider(): MedialibraryProvider<out MediaLibraryItem> =  when (groupingType) {
+    private fun loadProvider(): MedialibraryProvider<out MediaLibraryItem> = when (groupingType) {
         VideoGroupingType.NONE -> VideosProvider(folder, group, context, this)
         VideoGroupingType.FOLDER -> FoldersProvider(context, this, Folder.TYPE_FOLDER_VIDEO)
         VideoGroupingType.NAME -> VideoGroupsProvider(context, this)
@@ -72,6 +72,7 @@ class VideosViewModel(context: Context, type: VideoGroupingType, val folder: Fol
 
     init {
         watchMedia()
+        watchMediaGroups()
     }
 
     class Factory(val context: Context, private val groupingType: VideoGroupingType, val folder: Folder? = null, val group: VideoGroup? = null) : ViewModelProvider.NewInstanceFactory() {
@@ -82,8 +83,8 @@ class VideosViewModel(context: Context, type: VideoGroupingType, val folder: Fol
     }
 
     // Folders & Groups
-    internal suspend fun play(position: Int) {
-        val item = provider.pagedList.value?.get(position) ?: return
+    internal fun play(position: Int) = viewModelScope.launch {
+        val item = provider.pagedList.value?.get(position) ?: return@launch
         withContext(Dispatchers.IO) {
             when (item) {
                 is Folder -> item.getAll()
@@ -93,8 +94,8 @@ class VideosViewModel(context: Context, type: VideoGroupingType, val folder: Fol
         }?.let { MediaUtils.openList(context, it, 0) }
     }
 
-    internal suspend fun append(position: Int) {
-        val item = provider.pagedList.value?.get(position) ?: return
+    internal fun append(position: Int) = viewModelScope.launch {
+        val item = provider.pagedList.value?.get(position) ?: return@launch
         withContext(Dispatchers.IO) {
             when (item) {
                 is Folder -> item.getAll()
@@ -130,7 +131,11 @@ class VideosViewModel(context: Context, type: VideoGroupingType, val folder: Fol
         mw.removeFlags(MediaWrapper.MEDIA_FORCE_AUDIO)
         val settings = Settings.getInstance(context)
         if (settings.getBoolean(FORCE_PLAY_ALL, false)) {
-            MediaUtils.playAll(context, provider as VideosProvider, position, false)
+            when(val prov = provider) {
+                is VideosProvider -> MediaUtils.playAll(context, prov, position, false)
+                is FoldersProvider -> MediaUtils.playAllTracks(context, prov, position, false)
+                is VideoGroupsProvider -> MediaUtils.playAllTracks(context, prov, position, false)
+            }
         } else {
             if (fromStart) mw.addFlags(MediaWrapper.MEDIA_FROM_START)
             MediaUtils.openMedia(context, mw)
@@ -149,6 +154,55 @@ class VideosViewModel(context: Context, type: VideoGroupingType, val folder: Fol
         if (activity == null) return
         media.addFlags(MediaWrapper.MEDIA_FORCE_AUDIO)
         MediaUtils.openMedia(activity, media)
+    }
+
+    fun renameGroup(videoGroup: VideoGroup, newName: String) = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            videoGroup.rename(newName)
+        }
+    }
+
+    fun removeFromGroup(medias: List<MediaWrapper>) = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            medias.forEach { media ->
+                group?.remove(media.id)
+            }
+        }
+    }
+
+    fun removeFromGroup(media: MediaWrapper) = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            group?.remove(media.id)
+        }
+    }
+
+    fun ungroup(groups: List<MediaWrapper>) = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            groups.forEach { group ->
+                if (group is VideoGroup) group.destroy()
+            }
+        }
+    }
+
+    fun ungroup(group: VideoGroup) = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            group.destroy()
+        }
+    }
+
+    suspend fun createGroup(medias: List<MediaWrapper>): VideoGroup? {
+        if (medias.size < 2) return null
+        return withContext(Dispatchers.IO) {
+            val newGroup = medialibrary.createVideoGroup(medias.map { it.id }.toLongArray())
+            if (newGroup.title.isNullOrBlank()) {
+                newGroup.rename(medias[0].title)
+            }
+            newGroup
+        }
+    }
+
+    suspend fun groupSimilar(media: MediaWrapper) = withContext(Dispatchers.IO) {
+        medialibrary.regroup(media.id)
     }
 }
 
