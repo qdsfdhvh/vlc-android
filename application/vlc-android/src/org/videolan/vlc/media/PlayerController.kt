@@ -41,9 +41,8 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     val progress by lazy(LazyThreadSafetyMode.NONE) { MutableLiveData<Progress>().apply { value = Progress() } }
     private val slaveRepository by lazy { SlaveRepository.getInstance(context) }
 
-    val danmaEngine: IDanmakuEngine by lazy(LazyThreadSafetyMode.NONE) {
+    var danmaEngine: IDanmakuEngine =
         DanmakuEngine(DanmaService.get()?.loadDanmaOptions() ?: DanmakuEngineOptions())
-    }
 
     var mediaplayer = newMediaPlayer()
         private set
@@ -123,6 +122,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun restart() {
         val mp = mediaplayer
         mediaplayer = newMediaPlayer()
+        danmaEngine = DanmakuEngine(DanmaService.get()?.loadDanmaOptions() ?: DanmakuEngineOptions())
         release(mp)
     }
 
