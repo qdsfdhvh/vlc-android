@@ -53,11 +53,9 @@ import androidx.media.session.MediaButtonReceiver
 import com.seiko.danma.IDanmakuEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.actor
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.RendererItem
 import org.videolan.libvlc.interfaces.IMedia
@@ -503,7 +501,7 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
         restartPlayer.observe(this, Observer { restartMediaPlayer() })
         headSetDetection.observe(this, Observer { detectHeadset(it) })
         equalizer.observe(this, Observer { setEqualizer(it) })
-        instanceChannel.safeOffer(this)
+        serviceFlow.value = this
     }
 
     private fun setupScope() {
@@ -571,7 +569,7 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
     }
 
     override fun onDestroy() {
-        instanceChannel.safeOffer(null)
+        serviceFlow.value = null
         dispatcher.onServicePreSuperOnDestroy()
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
@@ -1323,11 +1321,9 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
     }
 
     companion object {
-        private val instanceChannel = ConflatedBroadcastChannel<PlaybackService?>(null)
+        val serviceFlow = MutableStateFlow<PlaybackService?>(null)
         val instance : PlaybackService?
-            get() = instanceChannel.valueOrNull
-        val serviceFlow : Flow<PlaybackService?>
-            get() = instanceChannel.asFlow()
+            get() = serviceFlow.value
 
         val renderer = RendererLiveData()
         val restartPlayer = LiveEvent<Boolean>()

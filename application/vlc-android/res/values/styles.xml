@@ -111,6 +111,7 @@
         <item name="default_separator">@color/grey300</item>
         <item name="empty_button">@style/Widget.MaterialComponents.Button.OutlinedButton</item>
         <item name="card_border">@color/grey300</item>
+        <item name="rounded_corners_bottom_default_darker">@drawable/rounded_corners_bottom_default_darker_light</item>
     </style>
 
     <style name="Theme.VLC.PickerDialog" parent="Theme.MaterialComponents.Dialog">
@@ -208,7 +209,7 @@
         <item name="ic_trash">@drawable/ic_trash_w</item>
         <item name="ic_reset">@drawable/ic_reset_w</item>
         <item name="gridview_progressbar">@drawable/gridview_progressbar_w</item>
-        <item name="progress_mini_player">@drawable/progress_mini_player</item>
+        <item name="progress_mini_player">@drawable/progress_mini_player_black</item>
         <item name="advanced_options_style">@style/Theme.MaterialComponents.Dialog</item>
         <item name="advanced_options_bg">@drawable/advanced_options_background_dark</item>
         <item name="ic_playasaudio_off">@drawable/ic_playasaudio_off_w</item>
@@ -237,6 +238,7 @@
         <item name="empty_button">@style/Widget.MaterialComponents.Button.OutlinedButton</item>
 
         <item name="card_border">@color/grey800</item>
+        <item name="rounded_corners_bottom_default_darker">@drawable/rounded_corners_bottom_default_darker_dark</item>
     </style>
 
     <style name="Theme.VLC.Onboarding" parent="Theme.VLC.Black">
@@ -261,18 +263,7 @@
         <item name="ariane_text_size">18sp</item>
         <item name="font_light">@color/grey50transparent_ea</item>
         <item name="empty_button">@style/Widget.Leanback.DetailsActionButtonStyle</item>
-    </style>
-
-    <style name="Theme.VLC.Info" parent="Theme.VLC">
-        <item name="ariane_text_color">@color/grey900</item>
-        <item name="ariane_text_size">14sp</item>
-    </style>
-
-    <style name="Theme.VLC.Info.Black" parent="Theme.VLC.Black">
-        <item name="ariane_text_color">@color/grey50</item>
-        <item name="ariane_text_size">14sp</item>
-
-
+        <item name="list_subtitle">@color/lb_basic_card_content_text_color</item>
     </style>
 
     <style name="VLCardView" parent="Widget.Leanback.ImageCardViewStyle">
@@ -611,6 +602,8 @@
     <style name="AppBottomSheetDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="bottomSheetStyle">@style/AppModalStyle</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
 
     </style>
 
@@ -632,13 +625,12 @@
     </style>
 
     <style name="ToolbarTitleText" parent="@style/TextAppearance.MaterialComponents.Headline6">
-        <item name="android:textStyle">bold</item>
         <item name="android:textColor">?attr/colorControlNormal</item>
     </style>
 
     <style name="VLCCardView" parent="@style/Widget.MaterialComponents.CardView">
         <item name="strokeColor">?attr/card_border</item>
-        <item name="cardCornerRadius">8dp</item>
+        <item name="cardCornerRadius">4dp</item>
         <item name="cardElevation">0dp</item>
         <item name="background">?attr/card_background</item>
         <item name="strokeWidth">1dp</item>

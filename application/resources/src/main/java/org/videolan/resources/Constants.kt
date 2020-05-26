@@ -27,6 +27,7 @@ const val EXTRA_FIRST_RUN = "extra_first_run"
 const val EXTRA_UPGRADE = "extra_upgrade"
 const val EXTRA_PARSE = "extra_parse"
 const val EXTRA_TARGET = "extra_parse"
+const val EXTRA_REMOVE_DEVICE = "extra_remove_device"
 
 //UI Navigation
 const val ID_VIDEO = "video"
@@ -136,6 +137,12 @@ const val KEY_FOLDER = "key_folder"
 const val KEY_GROUPING = "key_grouping"
 const val FAVORITE_TITLE = "favorite_title"
 
+const val KEY_VIDEOS_CARDS = "video_display_in_cards"
+const val KEY_GROUP_VIDEOS = "video_min_group_length"
+const val GROUP_VIDEOS_NONE = "-1"
+const val GROUP_VIDEOS_FOLDER = "0"
+const val GROUP_VIDEOS_NAME = "6"
+
 // Items updates
 const val UPDATE_SELECTION = 0
 const val UPDATE_THUMB = 1
@@ -143,6 +150,7 @@ const val UPDATE_TIME = 2
 const val UPDATE_SEEN = 3
 const val UPDATE_DESCRIPTION = 4
 const val UPDATE_PAYLOAD = 5
+const val UPDATE_VIDEO_GROUP = 6
 
 const val KEY_URI = "uri"
 const val SELECTED_ITEM = "selected"

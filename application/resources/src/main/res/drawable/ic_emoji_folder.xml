@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ *************************************************************************
-  ~  bottom_navigation_background_dark.xml
+  ~  ic_emoji_folder.xml
   ~ **************************************************************************
   ~ Copyright © 2020 VLC authors and VideoLAN
   ~ Author: Nicolas POMEPUY
@@ -22,15 +21,20 @@
   ~
   ~
   -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="@color/grey800" />
-        </shape>
-    </item>
-    <item android:top="1dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/grey875" />
-        </shape>
-    </item>
-</layer-list>
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp"
+    android:height="12dp"
+    android:viewportWidth="12"
+    android:viewportHeight="12">
+  <path
+      android:pathData="M1,3C0.4477,3 0,3.4477 0,4v7c0,0.5523 0.4477,1 1,1h10c0.5523,0 1,-0.4477 1,-1L12,6C12,5.4477 11.5523,5 11,5L6.5,5l-2,-2zM1,4h3.086l2,2L11,6v5L1,11Z"
+      android:strokeAlpha="1"
+      android:strokeLineJoin="miter"
+      android:strokeWidth="1.5"
+      android:fillColor="?attr/list_subtitle"
+      android:strokeColor="#00000000"
+      android:fillType="evenOdd"
+      android:fillAlpha="1"
+      android:strokeLineCap="butt"/>
+</vector>

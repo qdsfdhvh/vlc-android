@@ -125,6 +125,14 @@
                     app:layout_constraintStart_toStartOf="@+id/item_icon"
                     app:layout_constraintTop_toTopOf="@+id/item_icon" />
 
+<!--            This is a placeholder in case @+id/text is gone-->
+            <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="42dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/item_icon" />
+
             <TextView
                     android:id="@+id/title"
                     android:layout_width="0dp"
@@ -140,6 +148,7 @@
                     android:textColor="?attr/list_title"
                     android:textSize="14sp"
                     app:ellipsizeMode="@{true}"
+                    app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintBottom_toTopOf="@+id/text"
                     app:layout_constraintEnd_toStartOf="@+id/item_more"
                     app:layout_constraintStart_toStartOf="parent"
@@ -154,10 +163,10 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginBottom="4dp"
                     android:maxLines="1"
-                    app:asyncText="@{item}"
+                    app:browserDescription="@{item.description}"
                     android:textColor="?attr/list_subtitle"
                     android:textSize="12sp"
-                    android:visibility="@{TextUtils.isEmpty(item.description) ? View.INVISIBLE : View.VISIBLE}"
+                    android:visibility="@{TextUtils.isEmpty(item.description) ? View.GONE : View.VISIBLE}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/item_more"
                     app:layout_constraintStart_toStartOf="parent"
@@ -168,13 +177,14 @@
                     android:id="@+id/item_more"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    app:srcCompat="@drawable/ic_more"
+                    android:layout_marginBottom="4dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="@{hasContextMenu}"
                     android:onClick="@{holder::onMoreClick}"
                     android:visibility="@{hasContextMenu ? View.VISIBLE : View.GONE, default=gone}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
+                    app:srcCompat="@drawable/ic_more"
                     tools:visibility="visible" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
