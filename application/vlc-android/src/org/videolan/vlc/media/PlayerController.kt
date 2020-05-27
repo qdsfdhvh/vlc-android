@@ -44,6 +44,8 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     var danmaEngine: IDanmakuEngine =
         DanmakuEngine(DanmaService.get()?.loadDanmaOptions() ?: DanmakuEngineOptions())
 
+    private var danmaJob: Job? = null
+
     var mediaplayer = newMediaPlayer()
         private set
 
@@ -103,10 +105,13 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
         }
 
         // 加载弹幕
-        withContext(Dispatchers.IO) {
-            val data = DanmaService.get()?.getDanmaResult(media)
-            if (data != null) {
-                danmaEngine.setDanmaList(data.comments, data.shift)
+        coroutineScope {
+            danmaJob?.cancel()
+            danmaJob = launch {
+                val data = DanmaService.get()?.getDanmaResult(media)
+                if (data != null) {
+                    danmaEngine.setDanmaList(data.comments, data.shift)
+                }
             }
         }
     }
@@ -216,6 +221,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     }
 
     fun release(player: MediaPlayer = mediaplayer) {
+        danmaJob?.cancel()
         danmaEngine.release()
         player.setEventListener(null)
         if (isVideoPlaying()) player.vlcVout.detachViews()
