@@ -31,6 +31,7 @@ import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.vlc.R
 import org.videolan.vlc.gui.dialogs.DeviceDialog
 import org.videolan.vlc.gui.dialogs.NetworkServerDialog
+import org.videolan.vlc.gui.dialogs.VlcLoginDialog
 import org.videolan.vlc.media.MediaUtils
 import org.videolan.vlc.util.showVlcDialog
 
@@ -51,7 +52,10 @@ class DialogActivity : BaseActivity() {
             KEY_DEVICE -> setupDeviceDialog()
             KEY_DIALOG -> {
                 dialog?.run {
-                    showVlcDialog(this)
+                    val fragment = showVlcDialog(this)
+                    if (fragment is VlcLoginDialog) {
+                        fragment.mrl = mrl
+                    }
                     dialog = null
                 } ?: finish()
             }
@@ -84,6 +88,8 @@ class DialogActivity : BaseActivity() {
     companion object {
 
         var dialog : Dialog? = null
+        var mrl: String? = null
+
         const val KEY_SERVER = "serverDialog"
         const val KEY_SUBS_DL = "subsdlDialog"
         const val KEY_DEVICE = "deviceDialog"

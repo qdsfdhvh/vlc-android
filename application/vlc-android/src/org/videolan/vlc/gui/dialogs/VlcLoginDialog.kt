@@ -29,6 +29,14 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import com.seiko.danmaku.DanmaService
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.components.ApplicationComponent
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.videolan.libvlc.Dialog
 import org.videolan.vlc.R
 import org.videolan.vlc.databinding.VlcLoginDialogBinding
@@ -44,6 +52,16 @@ class VlcLoginDialog : VlcDialog<Dialog.LoginDialog, VlcLoginDialogBinding>(), V
 
     override val layout= R.layout.vlc_login_dialog
 
+    var mrl: String? = null
+
+    private lateinit var entryPoint: VlcLoginDialogEntryPoint
+
+    @InstallIn(ApplicationComponent::class)
+    @EntryPoint
+    interface VlcLoginDialogEntryPoint {
+        var danmaService: DanmaService
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         if (Settings.showTvUi && !AndroidDevices.hasPlayServices) {
@@ -56,12 +74,22 @@ class VlcLoginDialog : VlcDialog<Dialog.LoginDialog, VlcLoginDialogBinding>(), V
     override fun onAttach(context: Context) {
         super.onAttach(context)
         settings = Settings.getInstance(requireActivity())
+        entryPoint =  EntryPointAccessors.fromApplication(context, VlcLoginDialogEntryPoint::class.java)
     }
 
     fun onLogin(v: View) {
-        vlcDialog.postLogin(binding.login.text.toString().trim(),
-                binding.password.text.toString().trim(), binding.store.isChecked)
+        val account = binding.login.text.toString().trim()
+        val password = binding.password.text.toString().trim()
+        val store = binding.store.isChecked
+        vlcDialog.postLogin(account, password, store)
         settings.putSingle(LOGIN_STORE, binding.store.isChecked)
+
+        if (store && mrl.isNullOrEmpty()) {
+            GlobalScope.launch(Dispatchers.IO) {
+                entryPoint.danmaService.saveSmbServer(mrl!!, account, password)
+            }
+        }
+
         dismiss()
     }
 

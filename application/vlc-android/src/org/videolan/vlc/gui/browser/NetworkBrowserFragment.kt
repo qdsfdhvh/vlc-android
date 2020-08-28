@@ -38,6 +38,7 @@ import org.videolan.medialibrary.interfaces.media.MediaWrapper
 import org.videolan.resources.CTX_FAV_ADD
 import org.videolan.tools.NetworkMonitor
 import org.videolan.vlc.R
+import org.videolan.vlc.gui.dialogs.VlcLoginDialog
 import org.videolan.vlc.gui.view.EmptyLoadingState
 import org.videolan.vlc.util.DialogDelegate
 import org.videolan.vlc.util.IDialogManager
@@ -106,7 +107,10 @@ class NetworkBrowserFragment : BaseBrowserFragment(), IDialogManager {
     }
 
     override fun fireDialog(dialog: Dialog) {
-        showVlcDialog(dialog)
+        val fragment = showVlcDialog(dialog)
+        if (fragment is VlcLoginDialog) {
+            fragment.mrl = mrl
+        }
     }
 
     override fun dialogCanceled(dialog: Dialog?) {

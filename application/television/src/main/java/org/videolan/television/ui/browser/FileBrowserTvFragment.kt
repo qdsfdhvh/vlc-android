@@ -275,6 +275,7 @@ class FileBrowserTvFragment : BaseBrowserTvFragment<MediaLibraryItem>(), PathAda
 
     override fun fireDialog(dialog: Dialog) {
         DialogActivity.dialog = dialog
+        DialogActivity.mrl = mrl
         startActivity(Intent(DialogActivity.KEY_DIALOG, null, activity, DialogActivity::class.java))
     }
 
