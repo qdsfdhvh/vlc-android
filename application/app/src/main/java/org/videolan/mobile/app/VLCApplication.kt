@@ -25,6 +25,7 @@ import android.os.Build
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.multidex.MultiDexApplication
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import org.videolan.libvlc.Dialog
@@ -33,6 +34,7 @@ import org.videolan.vlc.util.DialogDelegate
 
 private const val TAG = "VLC/VLCApplication"
 
+@HiltAndroidApp
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 class VLCApplication : MultiDexApplication(), Dialog.Callbacks by DialogDelegate, AppDelegate by AppSetupDelegate() {

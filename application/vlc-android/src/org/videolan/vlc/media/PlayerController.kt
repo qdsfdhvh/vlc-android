@@ -7,6 +7,14 @@ import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
+import com.seiko.danmaku.DanmaService
+import com.seiko.danmaku.engine.IDanmakuEngine
+import com.seiko.danmaku.engine.internal.DanmakuEngine
+import com.seiko.danmaku.engine.internal.DanmakuEngineOptions
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.android.components.ApplicationComponent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.actor
@@ -33,6 +41,18 @@ import kotlin.math.abs
 class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.EventListener, CoroutineScope {
     override val coroutineContext = Dispatchers.Main.immediate + SupervisorJob()
 
+    @InstallIn(ApplicationComponent::class)
+    @EntryPoint
+    interface PlayerControllerEntryPoint {
+        var danmaOptions: DanmakuEngineOptions
+        var danmaService: DanmaService
+    }
+
+    private val entryPoint = EntryPointAccessors.fromApplication(context, PlayerControllerEntryPoint::class.java)
+    private val danmaService: DanmaService = entryPoint.danmaService
+    private var danmaJob: Job? = null
+    var danmaEngine: IDanmakuEngine = DanmakuEngine(entryPoint.danmaOptions)
+
     //    private val exceptionHandler by lazy(LazyThreadSafetyMode.NONE) { CoroutineExceptionHandler { _, _ -> onPlayerError() } }
     private val playerContext by lazy(LazyThreadSafetyMode.NONE) { newSingleThreadContext("vlc-player") }
     private val settings by lazy(LazyThreadSafetyMode.NONE) { Settings.getInstance(context) }
@@ -56,12 +76,16 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun getMedia(): IMedia? = mediaplayer.media
 
     fun play() {
-        if (mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.play()
+        if (mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.play()
+            danmaEngine.play()
+        }
     }
 
     fun pause(): Boolean {
         if (isPlaying() && mediaplayer.hasMedia() && pausable) {
             mediaplayer.pause()
+            danmaEngine.pause()
             return true
         }
         return false
@@ -89,6 +113,17 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
             mediaplayer.setVideoTitleDisplay(MediaPlayer.Position.Disable, 0)
             mediaplayer.play()
         }
+
+        // 加载弹幕
+        coroutineScope {
+            danmaJob?.cancel()
+            danmaJob = launch {
+                val data = danmaService.getDanmaResult(media)
+                if (data != null) {
+                    danmaEngine.setDanmaList(data.comments, data.shift)
+                }
+            }
+        }
     }
 
     private fun resetPlaybackState(time: Long, duration: Long) {
@@ -102,6 +137,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun restart() {
         val mp = mediaplayer
         mediaplayer = newMediaPlayer()
+        danmaEngine = DanmakuEngine(entryPoint.danmaOptions)
         release(mp)
     }
 
@@ -111,11 +147,17 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     }
 
     fun setPosition(position: Float) {
-        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.position = position
+        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.position = position
+            danmaEngine.seekTo((position * getLength()).toLong())
+        }
     }
 
     fun setTime(time: Long) {
-        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) mediaplayer.time = time
+        if (seekable && mediaplayer.hasMedia() && !mediaplayer.isReleased) {
+            mediaplayer.time = time
+            danmaEngine.seekTo(time)
+        }
     }
 
     fun isPlaying() = playbackState == PlaybackStateCompat.STATE_PLAYING
@@ -185,6 +227,8 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     }
 
     fun release(player: MediaPlayer = mediaplayer) {
+        danmaJob?.cancel()
+        danmaEngine.release()
         player.setEventListener(null)
         if (isVideoPlaying()) player.vlcVout.detachViews()
         releaseMedia()
@@ -233,6 +277,7 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun setRate(rate: Float, save: Boolean) {
         if (mediaplayer.isReleased) return
         mediaplayer.rate = rate
+        danmaEngine.setRate(rate)
         if (save && settings.getBoolean(KEY_PLAYBACK_SPEED_PERSIST, false))
             settings.putSingle(KEY_PLAYBACK_RATE, rate)
     }

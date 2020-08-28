@@ -51,6 +51,7 @@ import androidx.lifecycle.ServiceLifecycleDispatcher
 import androidx.lifecycle.lifecycleScope
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.session.MediaButtonReceiver
+import com.seiko.danmaku.engine.IDanmakuEngine
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.SendChannel
@@ -92,8 +93,13 @@ class PlaybackService : MediaBrowserServiceCompat(), LifecycleOwner {
 
     lateinit var playlistManager: PlaylistManager
         private set
+
     val mediaplayer: MediaPlayer
         get() = playlistManager.player.mediaplayer
+
+    val danmakuEngine: IDanmakuEngine
+        get() = playlistManager.player.danmaEngine
+
     private lateinit var keyguardManager: KeyguardManager
     internal lateinit var settings: SharedPreferences
     private val binder = LocalBinder()

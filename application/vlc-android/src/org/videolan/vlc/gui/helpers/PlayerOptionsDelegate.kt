@@ -26,9 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.*
 import org.videolan.resources.*
-import org.videolan.tools.AppScope
-import org.videolan.tools.Settings
-import org.videolan.tools.formatRateString
+import org.videolan.tools.*
 import org.videolan.vlc.PlaybackService
 import org.videolan.vlc.R
 import org.videolan.vlc.databinding.PlayerOptionItemBinding
@@ -59,6 +57,7 @@ private const val ID_PASSTHROUGH = 12L
 private const val ID_ABREPEAT = 13L
 private const val ID_LOCK_PLAYER = 14L
 private const val ID_VIDEO_STATS = 15L
+private const val ID_DANMA_TRACK = 100L
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -119,6 +118,13 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
         options.add(PlayerOption(ID_SAVE_PLAYLIST, R.attr.ic_save, res.getString(R.string.playlist_save)))
         if (service.playlistManager.player.canDoPassthrough() && settings.getString("aout", "0") == "0")
             options.add(PlayerOption(ID_PASSTHROUGH, R.attr.ic_passthrough, res.getString(R.string.audio_digital_title)))
+
+        if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
+            options.add(PlayerOption(ID_DANMA_TRACK, R.drawable.ic_subtitle_w, res.getString(R.string.danma_open)))
+        } else {
+            options.add(PlayerOption(ID_DANMA_TRACK, R.drawable.ic_subtitle_w, res.getString(R.string.danma_close)))
+        }
+
         (recyclerview.adapter as OptionsAdapter).update(options)
     }
 
@@ -179,6 +185,17 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
             ID_VIDEO_STATS -> {
                 hide()
                 service.playlistManager.toggleStats()
+            }
+            ID_DANMA_TRACK -> {
+                hide()
+                val show = !settings.getBoolean(KEY_SETTING_DANMA, true)
+                settings.putSingle(KEY_SETTING_DANMA, show)
+                if (show) {
+                    service.danmakuEngine.show()
+                } else {
+                    service.danmakuEngine.hide()
+                }
+                return
             }
             else -> showFragment(option.id)
         }
@@ -336,6 +353,16 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
         }
     }
 
+    private fun initDanma(binding: PlayerOptionItemBinding) {
+        if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
+            binding.optionTitle.text = res.getString(R.string.danma_open)
+            binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, R.drawable.ic_subtitle_w))
+        } else {
+            binding.optionTitle.text = res.getString(R.string.danma_close)
+            binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, R.drawable.ic_subtitle_w))
+        }
+    }
+
     private fun togglePassthrough() {
         val enabled = !VLCOptions.isAudioDigitalOutputEnabled(settings)
         if (service.setAudioDigitalOutputEnabled(enabled)) {
@@ -373,6 +400,7 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
                 option.id == ID_AUDIO_DELAY -> initAudioDelay(holder.binding)
                 option.id == ID_JUMP_TO -> initJumpTo(holder.binding)
                 option.id == ID_SPU_DELAY -> initSpuDelay(holder.binding)
+                option.id == ID_DANMA_TRACK -> initDanma(holder.binding)
             }
             holder.binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, option.icon))
         }

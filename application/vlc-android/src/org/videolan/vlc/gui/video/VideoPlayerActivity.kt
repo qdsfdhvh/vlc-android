@@ -69,11 +69,13 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
+import com.seiko.danmaku.engine.internal.SimpleDrawHandlerCallback
 import kotlinx.android.synthetic.main.player_overlay_brightness.*
 import kotlinx.android.synthetic.main.player_overlay_volume.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import master.flame.danmaku.ui.widget.DanmakuView
 import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.interfaces.IMedia
 import org.videolan.libvlc.util.AndroidUtil
@@ -114,6 +116,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
     var service: PlaybackService? = null
     lateinit var medialibrary: Medialibrary
     private var videoLayout: VLCVideoLayout? = null
+    private var danmukuLayout: DanmakuView? = null
     lateinit var displayManager: DisplayManager
     private var rootView: View? = null
     var videoUri: Uri? = null
@@ -407,6 +410,7 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
         }
 
         videoLayout = findViewById(R.id.video_layout)
+        danmukuLayout = findViewById(R.id.danmaku_layout)
 
         /* Loading view */
         loadingImageView = findViewById(R.id.player_overlay_loading)
@@ -737,6 +741,17 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                 mediaPlayer.attachViews(it, displayManager, true, false)
                 val size = if (isBenchmark) MediaPlayer.ScaleType.SURFACE_FILL else MediaPlayer.ScaleType.values()[settings.getInt(VIDEO_RATIO, MediaPlayer.ScaleType.SURFACE_BEST_FIT.ordinal)]
                 mediaPlayer.videoScale = size
+            }
+
+            danmukuLayout?.let {
+                danmakuEngine.bindDanmakuView(it)
+                danmakuEngine.setCallback(object : SimpleDrawHandlerCallback() {
+                    override fun prepared() {
+                        val show = settings.getBoolean(KEY_SETTING_DANMA, true)
+                        if (show) danmakuEngine.show() else danmakuEngine.hide()
+                        danmakuEngine.seekTo(time)
+                    }
+                })
             }
 
             initUI()

@@ -17,7 +17,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:fitsSystemWindows="false" />
-
+    <master.flame.danmaku.ui.widget.DanmakuView
+        android:id="@+id/danmaku_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="false"/>
 
     <androidx.appcompat.widget.ViewStubCompat
             android:id="@+id/player_seek_stub"
