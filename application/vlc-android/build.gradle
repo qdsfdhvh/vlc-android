@@ -154,7 +154,7 @@ dependencies {
     api project(':application:mediadb')
     api project(':application:live-plot-graph')
     api project(':application:donations')
-
+    api project(':application:danmaku')
 
     // AppCompat
     api "androidx.activity:activity-ktx:$rootProject.ext.androidxActivityVersion"
