@@ -746,10 +746,16 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
             danmukuLayout?.let {
                 danmakuEngine.bindDanmakuView(it)
                 danmakuEngine.setCallback(object : SimpleDrawHandlerCallback() {
-                    override fun prepared() {
+                    override fun prepared(size: Int?) {
+                        // 显示隐藏弹幕
                         val show = settings.getBoolean(KEY_SETTING_DANMA, true)
                         if (show) danmakuEngine.show() else danmakuEngine.hide()
+                        // 跳转到当前进度
                         danmakuEngine.seekTo(time)
+                        // 通知弹幕数量
+                        if (show) {
+                            showToast("加载弹幕数：${size ?: 0}", Toast.LENGTH_LONG)
+                        }
                     }
                 })
             }

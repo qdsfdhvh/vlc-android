@@ -57,6 +57,13 @@ interface IDanmakuEngine {
     /**
      * 烈焰弹幕回调
      */
-    fun setCallback(callback: DrawHandler.Callback?)
+    fun setCallback(callback: Callback?)
 
+    interface Callback : DrawHandler.Callback {
+        fun prepared(size: Int?)
+
+        override fun prepared() {
+            prepared(null)
+        }
+    }
 }

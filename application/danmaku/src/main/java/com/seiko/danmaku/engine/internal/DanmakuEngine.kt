@@ -17,9 +17,9 @@ class DanmakuEngine(
 ) : IDanmakuEngine, DrawHandler.Callback {
 
     private var danmaView: IDanmakuView? = null
-    private var danmaCallback: DrawHandler.Callback? = null
+    private var danmaCallback: IDanmakuEngine.Callback? = null
 
-    private var danmaParser: BaseDanmakuParser? = null
+    private var danmaParser: JsonDanmakuParser? = null
     private var danmaContext: DanmakuContext? = null
 
     /**
@@ -146,14 +146,14 @@ class DanmakuEngine(
 
     override fun prepared() {
         log("prepared")
-        danmaCallback?.prepared()
+        danmaCallback?.prepared(danmaParser?.size())
     }
 
     override fun updateTimer(timer: DanmakuTimer) {
         danmaCallback?.updateTimer(timer)
     }
 
-    override fun setCallback(callback: DrawHandler.Callback?) {
+    override fun setCallback(callback: IDanmakuEngine.Callback?) {
         danmaCallback = callback
     }
 }

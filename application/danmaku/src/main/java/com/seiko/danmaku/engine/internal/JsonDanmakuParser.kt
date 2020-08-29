@@ -219,4 +219,6 @@ class JsonDanmakuParser(private val danmaList: List<Danma>) : BaseDanmakuParser(
     }
 
     private fun String.isFloat() = this.toFloatOrNull() != null
+
+    fun size(): Int = danmaList.size
 }

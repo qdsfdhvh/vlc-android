@@ -6,6 +6,7 @@ import com.seiko.danmaku.domain.GetDanmaResultWithNetUseCase
 import com.seiko.danmaku.domain.GetDanmaResultWithSmbUseCase
 import com.seiko.danmaku.data.model.Result
 import com.seiko.danmaku.data.repo.SmbMrlRepository
+import com.seiko.danmaku.util.log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.videolan.libvlc.interfaces.IMedia
@@ -25,6 +26,7 @@ class DanmaServiceImpl @Inject constructor(
     }
 
     override suspend fun getDanmaResult(media: IMedia): DanmaResultBean? {
+        log("Get Danma ${media.uri}")
         return getDanmaResult(media, true)
     }
 
