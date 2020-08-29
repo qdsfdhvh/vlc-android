@@ -23,7 +23,7 @@ class GetDanmaCommentsUseCase @Inject constructor(
     suspend fun hash(videoMd5: String, isMatched: Boolean): Result<List<DanmaCommentBean>> {
 //        Timber.tag(DANMA_RESULT_TAG).d("get danma comments...")
         // 尝试从本地数据库获取弹幕
-        var start = System.currentTimeMillis()
+//        var start = System.currentTimeMillis()
         when(val result = danmaDbRepo.getDanmaDownloadBean(videoMd5)) {
             is Result.Success -> {
 //                Timber.tag(DANMA_RESULT_TAG).d("get danma from db, 耗时：%d",
@@ -39,7 +39,7 @@ class GetDanmaCommentsUseCase @Inject constructor(
         }
 
         // 下载弹幕
-        start = System.currentTimeMillis()
+//        start = System.currentTimeMillis()
         return when(val result = danmaApiRepo.downloadDanma(episodeId)) {
             is Result.Success -> {
 //                Timber.tag(DANMA_RESULT_TAG).d("get danma from net, 耗时：%d",

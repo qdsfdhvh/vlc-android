@@ -37,7 +37,7 @@ class GetDanmaResultWithFtpUseCase @Inject constructor(
         val account = smbMrl.account
         val password = smbMrl.password
 
-        val start = System.currentTimeMillis()
+//        val start = System.currentTimeMillis()
 //        Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with ftp downloading...")
 
         // 获取ftp资源的md5

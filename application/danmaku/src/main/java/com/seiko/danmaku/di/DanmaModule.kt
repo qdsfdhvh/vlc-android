@@ -24,7 +24,7 @@ object DanmaModule {
             //弹幕滚动速度
             setScrollSpeedFactor(1.4f)
             //弹幕文字大小
-            setScaleTextSize(2.4f)
+            setScaleTextSize(2.3f)
 //        //弹幕文字透明度
 //        .setDanmakuTransparency(0.8f)
             // 是否显示滚动弹幕

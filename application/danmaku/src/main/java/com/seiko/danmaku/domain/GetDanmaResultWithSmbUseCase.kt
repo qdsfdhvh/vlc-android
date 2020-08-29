@@ -53,7 +53,7 @@ class GetDanmaResultWithSmbUseCase @Inject constructor(
             return Result.Error(e)
         }
 
-        val start = System.currentTimeMillis()
+//        val start = System.currentTimeMillis()
 //        Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with smb...")
 
         // 获取视频Md5，需要下载16mb资源，很慢16~35s。
