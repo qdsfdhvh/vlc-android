@@ -7,6 +7,7 @@ import com.seiko.danmaku.data.repo.SmbMrlRepository
 import com.seiko.danmaku.data.model.Result
 import com.seiko.danmaku.util.SmbUtils
 import com.seiko.danmaku.util.getVideoMd5
+import com.seiko.danmaku.util.log
 import java.io.FileNotFoundException
 import javax.inject.Inject
 
@@ -26,7 +27,7 @@ class GetDanmaResultWithSmbUseCase @Inject constructor(
         // 先从数据去查找是否与此url匹配的MD5，没有则连接SMB去获取。
         var videoMd5 = smbMd5Repo.getVideoMd5(urlValue)
         if (!videoMd5.isNullOrEmpty()) {
-//            Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with smb from db")
+            log("get videoMd5 with smb from db")
             return getResult.invoke(videoMd5, isMatched)
         }
 
@@ -38,7 +39,7 @@ class GetDanmaResultWithSmbUseCase @Inject constructor(
         val password = smbMrl.password
 
         // 获取smb路径
-        val videoFile = kotlin.runCatching {
+        val videoFile = runCatching {
             SmbUtils.getInstance().getFileWithUri(videoUri, account, password)
         }.getOrElse { error ->
             return Result.Error(error as Exception)
@@ -53,15 +54,14 @@ class GetDanmaResultWithSmbUseCase @Inject constructor(
             return Result.Error(e)
         }
 
-//        val start = System.currentTimeMillis()
-//        Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with smb...")
+        val start = System.currentTimeMillis()
+        log("get videoMd5 with smb...")
 
         // 获取视频Md5，需要下载16mb资源，很慢16~35s。
         videoMd5 = videoFile.inputStream.getVideoMd5()
         smbMd5Repo.saveVideoMd5(urlValue, videoMd5)
 
-//        Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with smb, 耗时：%d",
-//            System.currentTimeMillis() - start)
+        log("get videoMd5 with smb, 耗时：${System.currentTimeMillis() - start}")
 
         // 加载弹幕
         return getResult.invoke(videoMd5, isMatched)

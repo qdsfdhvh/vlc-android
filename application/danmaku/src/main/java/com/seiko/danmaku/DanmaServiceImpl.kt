@@ -7,6 +7,7 @@ import com.seiko.danmaku.domain.GetDanmaResultWithSmbUseCase
 import com.seiko.danmaku.data.model.Result
 import com.seiko.danmaku.data.repo.SmbMrlRepository
 import com.seiko.danmaku.util.log
+import com.seiko.danmaku.util.loge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.videolan.libvlc.interfaces.IMedia
@@ -22,6 +23,7 @@ class DanmaServiceImpl @Inject constructor(
 ) : DanmaService {
 
     override suspend fun saveSmbServer(mrl: String, account: String, password: String) {
+        log("Save account=${account}, password=${password}")
         smbMrlRepo.saveSmbMrl(mrl, account, password)
     }
 
@@ -38,14 +40,14 @@ class DanmaServiceImpl @Inject constructor(
                 "http", "https" -> getDanmaResultWithNet.invoke(media.uri.toString(), isMatched)
                 "ftp", "sftp" -> getDanmaResultWithFtp.invoke(media.uri, isMatched, scheme)
                 else -> {
-//                    Timber.d("danma service do not support url -> ${media.uri}")
+                    log("danma service do not support url -> ${media.uri}")
                     return@withContext null
                 }
             }
             when(result) {
                 is Result.Success -> result.data
                 is Result.Error -> {
-//                    Timber.e(result.exception)
+                    loge(result.exception)
                     null
                 }
             }

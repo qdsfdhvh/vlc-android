@@ -12,19 +12,19 @@ internal fun log(msg: String) {
     }
 }
 
-internal fun log(msg: String, e: Throwable?) {
-    if (LOG_ENABLE) {
-        Log.e(LOG_TAG, msg, e)
-    }
-}
-
 internal fun log(tag: String, msg: String) {
     if (LOG_ENABLE) {
         Log.d(tag, msg)
     }
 }
 
-internal fun log(tag: String, msg: String, e: Throwable?) {
+internal fun loge(e: Throwable?) {
+    if (LOG_ENABLE) {
+        Log.e(LOG_TAG, e?.message, e)
+    }
+}
+
+internal fun loge(tag: String, msg: String, e: Throwable?) {
     if (LOG_ENABLE) {
         Log.e(tag, msg, e)
     }

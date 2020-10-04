@@ -5,6 +5,7 @@ import com.seiko.danmaku.data.model.DanmaCommentBean
 import com.seiko.danmaku.data.repo.DanDanApiRepository
 import com.seiko.danmaku.data.repo.VideoDanmaRepository
 import com.seiko.danmaku.data.model.Result
+import com.seiko.danmaku.util.log
 import javax.inject.Inject
 
 /**
@@ -21,13 +22,12 @@ class GetDanmaCommentsUseCase @Inject constructor(
      * @param isMatched 是否精确匹配
      */
     suspend fun hash(videoMd5: String, isMatched: Boolean): Result<List<DanmaCommentBean>> {
-//        Timber.tag(DANMA_RESULT_TAG).d("get danma comments...")
+        log("get danma comments...")
         // 尝试从本地数据库获取弹幕
-//        var start = System.currentTimeMillis()
+        var start = System.currentTimeMillis()
         when(val result = danmaDbRepo.getDanmaDownloadBean(videoMd5)) {
             is Result.Success -> {
-//                Timber.tag(DANMA_RESULT_TAG).d("get danma from db, 耗时：%d",
-//                    System.currentTimeMillis() - start)
+                log("get danma from db, 耗时：${System.currentTimeMillis() - start}")
                 return Result.Success(result.data)
             }
         }
@@ -39,11 +39,10 @@ class GetDanmaCommentsUseCase @Inject constructor(
         }
 
         // 下载弹幕
-//        start = System.currentTimeMillis()
+        start = System.currentTimeMillis()
         return when(val result = danmaApiRepo.downloadDanma(episodeId)) {
             is Result.Success -> {
-//                Timber.tag(DANMA_RESULT_TAG).d("get danma from net, 耗时：%d",
-//                    System.currentTimeMillis() - start)
+                log("get danma from net, 耗时：${System.currentTimeMillis() - start}")
                 // 保存到数据库
                 danmaDbRepo.saveDanmaDownloadBean(VideoDanmaku(
                     videoMd5 = videoMd5,

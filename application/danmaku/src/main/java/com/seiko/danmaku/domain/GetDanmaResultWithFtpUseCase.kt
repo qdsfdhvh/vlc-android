@@ -7,6 +7,7 @@ import com.seiko.danmaku.data.repo.SmbMrlRepository
 import com.seiko.danmaku.data.model.Result
 import com.seiko.danmaku.util.FtpUtils
 import com.seiko.danmaku.util.SftpUtils
+import com.seiko.danmaku.util.log
 import javax.inject.Inject
 
 class GetDanmaResultWithFtpUseCase @Inject constructor(
@@ -26,7 +27,7 @@ class GetDanmaResultWithFtpUseCase @Inject constructor(
         // 先从数据去查找是否与此url匹配的MD5，没有则连接SMB去获取。
         var videoMd5 = smbMd5Repo.getVideoMd5(urlValue)
         if (!videoMd5.isNullOrEmpty()) {
-//            Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with ftp from db")
+            log("get videoMd5 with ftp from db")
             return getResult.invoke(videoMd5, isMatched)
         }
 
@@ -37,8 +38,8 @@ class GetDanmaResultWithFtpUseCase @Inject constructor(
         val account = smbMrl.account
         val password = smbMrl.password
 
-//        val start = System.currentTimeMillis()
-//        Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with ftp downloading...")
+        val start = System.currentTimeMillis()
+        log("get videoMd5 with ftp downloading...")
 
         // 获取ftp资源的md5
         videoMd5 = kotlin.runCatching {
@@ -57,8 +58,7 @@ class GetDanmaResultWithFtpUseCase @Inject constructor(
         }
         smbMd5Repo.saveVideoMd5(urlValue, videoMd5)
 
-//        Timber.tag(DANMA_RESULT_TAG).d("get videoMd5 with ftp, 耗时：%d",
-//            System.currentTimeMillis() - start)
+        log("get videoMd5 with ftp, 耗时：${System.currentTimeMillis() - start}")
 
         return getResult.invoke(videoMd5, isMatched)
     }
