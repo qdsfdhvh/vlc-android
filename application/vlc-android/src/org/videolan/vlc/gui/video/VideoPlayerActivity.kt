@@ -475,7 +475,6 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
 
         overlayDelegate.playToPause = AnimatedVectorDrawableCompat.create(this, R.drawable.anim_play_pause_video)!!
         overlayDelegate.pauseToPlay = AnimatedVectorDrawableCompat.create(this, R.drawable.anim_pause_play_video)!!
-        overlayDelegate.vibrator = getSystemService<Vibrator>()!!
     }
 
     override fun afterTextChanged(s: Editable?) {
@@ -692,7 +691,6 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
         previousMediaPath = null
         addedExternalSubs.clear()
         medialibrary.resumeBackgroundOperations()
-        service?.playlistManager?.videoStatsOn?.postValue(false)
     }
 
     private fun saveBrightness() {
@@ -895,9 +893,12 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
             overlayDelegate.togglePlaylist()
         } else if (isPlaybackSettingActive) {
             delayDelegate.endPlaybackSetting()
+        } else if (isShowing && service?.playlistManager?.videoStatsOn?.value == true) {
+            //hides video stats if they are displayed
+            service?.playlistManager?.videoStatsOn?.postValue(false)
         } else if (isTv && isShowing && !isLocked) {
             overlayDelegate.hideOverlay(true)
-        } else {
+        }  else {
             exitOK()
             super.onBackPressed()
         }
@@ -2023,7 +2024,11 @@ open class VideoPlayerActivity : AppCompatActivity(), PlaybackService.Callback, 
                     }
                 }
                 val interactive = service?.mediaplayer?.let {
-                    (it.titles[it.title])?.isInteractive ?: false
+                    try {
+                        (it.titles[it.title])?.isInteractive ?: false
+                    } catch (e: NullPointerException) {
+                        false
+                    }
                 } ?: false
                 isNavMenu = menuIdx == currentIdx || interactive
             }

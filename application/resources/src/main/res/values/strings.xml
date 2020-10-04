@@ -753,4 +753,8 @@
 
     <string name="danma_close">Close Danma</string>
     <string name="danma_open">Open Danma</string>
+
+    <string name="mark_as_played">Mark as played</string>
+    <string name="mark_all_as_played">Mark all as played</string>
+
 </resources>
