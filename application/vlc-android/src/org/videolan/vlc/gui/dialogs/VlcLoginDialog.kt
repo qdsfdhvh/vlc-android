@@ -84,7 +84,7 @@ class VlcLoginDialog : VlcDialog<Dialog.LoginDialog, VlcLoginDialogBinding>(), V
         vlcDialog.postLogin(account, password, store)
         settings.putSingle(LOGIN_STORE, binding.store.isChecked)
 
-        if (store && mrl.isNullOrEmpty()) {
+        if (store && !mrl.isNullOrEmpty()) {
             GlobalScope.launch(Dispatchers.IO) {
                 entryPoint.danmaService.saveSmbServer(mrl!!, account, password)
             }
