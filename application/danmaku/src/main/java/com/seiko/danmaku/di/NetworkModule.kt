@@ -32,7 +32,7 @@ object NetworkModule {
             .addInterceptor(GzipInterceptor())
         if (BuildConfig.DEBUG) {
             builder.addInterceptor(HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.HEADERS
+                level = HttpLoggingInterceptor.Level.BODY
             })
         }
         return builder.build()
