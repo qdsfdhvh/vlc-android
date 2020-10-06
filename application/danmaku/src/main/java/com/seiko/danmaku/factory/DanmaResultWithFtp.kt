@@ -1,27 +1,24 @@
-package com.seiko.danmaku.domain
+package com.seiko.danmaku.factory
 
 import android.net.Uri
 import com.seiko.danmaku.DanmaResultBean
 import com.seiko.danmaku.data.repo.SmbMd5Repository
 import com.seiko.danmaku.data.repo.SmbMrlRepository
 import com.seiko.danmaku.data.model.Result
+import com.seiko.danmaku.domain.GetDanmaResultUseCase
 import com.seiko.danmaku.util.FtpUtils
 import com.seiko.danmaku.util.SftpUtils
 import com.seiko.danmaku.util.log
 import javax.inject.Inject
 
-class GetDanmaResultWithFtpUseCase @Inject constructor(
+class DanmaResultWithFtp @Inject constructor(
     private val getResult: GetDanmaResultUseCase,
     private val smbMd5Repo: SmbMd5Repository,
     private val smbMrlRepo: SmbMrlRepository
-) {
+) : IDanmaResult {
 
-    /**
-     * @param videoUri ftp路径
-     * @param isMatched 是否精确匹配
-     * @param scheme ftp sftp
-     */
-    suspend operator fun invoke(videoUri: Uri, isMatched: Boolean, scheme: String): Result<DanmaResultBean> {
+    override suspend fun decode(videoUri: Uri, isMatched: Boolean): Result<DanmaResultBean> {
+        val scheme = videoUri.scheme!!
         val urlValue = videoUri.toString()
 
         // 先从数据去查找是否与此url匹配的MD5，没有则连接SMB去获取。

@@ -1,21 +1,23 @@
-package com.seiko.danmaku.domain
+package com.seiko.danmaku.factory
 
+import android.net.Uri
 import com.seiko.danmaku.DanmaResultBean
 import com.seiko.danmaku.data.model.Result
+import com.seiko.danmaku.domain.GetDanmaResultUseCase
 import com.seiko.danmaku.util.getVideoMd5
 import java.io.File
 import java.io.FileNotFoundException
 import javax.inject.Inject
 
-class GetDanmaResultWithFileUseCase @Inject constructor(
+class DanmaResultWithFile @Inject constructor(
     private val getResult: GetDanmaResultUseCase
-) {
+) : IDanmaResult {
 
-    /**
-     * @param videoFile 视频路径
-     * @param isMatched 是否精确匹配
-     */
-    suspend operator fun invoke(videoFile: File, isMatched: Boolean): Result<DanmaResultBean> {
+    override suspend fun decode(videoUri: Uri, isMatched: Boolean): Result<DanmaResultBean> {
+
+        // 文件路径
+        val videoFile = File(videoUri.path!!)
+
         // 视频是否存在
         if (!videoFile.exists()) {
             return Result.Error(FileNotFoundException("Not found file: $videoFile"))

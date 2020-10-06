@@ -1,24 +1,23 @@
-package com.seiko.danmaku.domain
+package com.seiko.danmaku.factory
 
+import android.net.Uri
 import com.seiko.danmaku.DanmaResultBean
 import com.seiko.danmaku.data.api.DownloadApi
 import com.seiko.danmaku.data.repo.SmbMd5Repository
 import com.seiko.danmaku.data.model.Result
+import com.seiko.danmaku.domain.GetDanmaResultUseCase
 import com.seiko.danmaku.util.getVideoMd5
 import com.seiko.danmaku.util.log
 import javax.inject.Inject
 
-class GetDanmaResultWithNetUseCase @Inject constructor(
+class DanmaResultWithNet @Inject constructor(
     private val getResult: GetDanmaResultUseCase,
     private val smbMd5Repo: SmbMd5Repository,
     private val downloadApi: DownloadApi
-) {
+) : IDanmaResult {
 
-    /**
-     * @param url 视频连接
-     * @param isMatched 是否精确匹配
-     */
-    suspend operator fun invoke(url: String, isMatched: Boolean): Result<DanmaResultBean> {
+    override suspend fun decode(videoUri: Uri, isMatched: Boolean): Result<DanmaResultBean> {
+        val url = videoUri.toString()
 
         // 先从数据去查找是否与此url匹配的MD5，没有则下载数据去获取。
         var videoMd5 = smbMd5Repo.getVideoMd5(url)

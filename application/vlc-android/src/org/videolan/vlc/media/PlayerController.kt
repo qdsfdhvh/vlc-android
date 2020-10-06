@@ -3,11 +3,13 @@ package org.videolan.vlc.media
 import android.content.Context
 import android.net.Uri
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import android.widget.Toast
 import androidx.annotation.MainThread
 import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
 import com.seiko.danmaku.DanmaService
+import com.seiko.danmaku.data.model.Result
 import com.seiko.danmaku.engine.IDanmakuEngine
 import com.seiko.danmaku.engine.internal.DanmakuEngine
 import com.seiko.danmaku.engine.internal.DanmakuEngineOptions
@@ -117,10 +119,15 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
         // 加载弹幕
         coroutineScope {
             danmaJob?.cancel()
-            danmaJob = launch {
-                val data = danmaService.getDanmaResult(media)
-                if (data != null) {
-                    danmaEngine.setDanmaList(data.comments, data.shift)
+            danmaJob = launch(Dispatchers.IO) {
+                when(val result = danmaService.getDanmaResult(media)) {
+                    is Result.Success -> {
+                        val data = result.data
+                        danmaEngine.setDanmaList(data.comments, data.shift)
+                    }
+                    is Result.Error -> {
+                        Log.e("VLC/Danmaku", "getDanmaResult Error:", result.exception)
+                    }
                 }
             }
         }
