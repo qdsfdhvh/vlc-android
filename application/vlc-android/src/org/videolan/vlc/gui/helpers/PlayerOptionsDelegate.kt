@@ -78,6 +78,7 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
     private lateinit var repeatBinding: PlayerOptionItemBinding
     private lateinit var shuffleBinding: PlayerOptionItemBinding
     private lateinit var sleepBinding: PlayerOptionItemBinding
+    private lateinit var danmaBinding: PlayerOptionItemBinding
 
     private val abrObs = Observer<Boolean> { abr ->
         if (abr == null || !this::abrBinding.isInitialized) return@Observer
@@ -120,9 +121,9 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
             options.add(PlayerOption(ID_PASSTHROUGH, R.attr.ic_passthrough, res.getString(R.string.audio_digital_title)))
 
         if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
-            options.add(PlayerOption(ID_DANMA_TRACK, R.drawable.ic_subtitle_w, res.getString(R.string.danma_open)))
+            options.add(PlayerOption(ID_DANMA_TRACK, 0, res.getString(R.string.danma_open)))
         } else {
-            options.add(PlayerOption(ID_DANMA_TRACK, R.drawable.ic_subtitle_w, res.getString(R.string.danma_close)))
+            options.add(PlayerOption(ID_DANMA_TRACK, 0, res.getString(R.string.danma_close)))
         }
 
         (recyclerview.adapter as OptionsAdapter).update(options)
@@ -354,12 +355,15 @@ class PlayerOptionsDelegate(val activity: AppCompatActivity, val service: Playba
     }
 
     private fun initDanma(binding: PlayerOptionItemBinding) {
-        if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
-            binding.optionTitle.text = res.getString(R.string.danma_open)
-            binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, R.drawable.ic_subtitle_w))
-        } else {
-            binding.optionTitle.text = res.getString(R.string.danma_close)
-            binding.optionIcon.setImageResource(UiTools.getResourceFromAttribute(activity, R.drawable.ic_subtitle_w))
+        danmaBinding = binding
+        AppScope.launch(Dispatchers.Main) {
+            if (settings.getBoolean(KEY_SETTING_DANMA, true)) {
+                danmaBinding.optionTitle.text = res.getString(R.string.danma_open)
+                danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_on)
+            } else {
+                danmaBinding.optionTitle.text = res.getString(R.string.danma_close)
+                danmaBinding.optionIcon.setImageResource(R.drawable.ic_danma_off)
+            }
         }
     }
 
