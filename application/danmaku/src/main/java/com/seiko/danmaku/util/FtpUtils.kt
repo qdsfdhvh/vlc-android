@@ -3,6 +3,7 @@ package com.seiko.danmaku.util
 import android.net.Uri
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
+import org.apache.commons.net.ftp.FTPConnectionClosedException
 import org.apache.commons.net.ftp.FTPReply
 import java.nio.charset.Charset
 
@@ -32,8 +33,13 @@ object FtpUtils {
 
         val md5 = ins.buffered().use { it.getVideoMd5() }
 
-        client.logout()
-        client.disconnect()
+        // 忽略关闭异常
+        try {
+            client.logout()
+            client.disconnect()
+        } catch (e: FTPConnectionClosedException) {
+            e.printStackTrace()
+        }
 
         return md5
     }
