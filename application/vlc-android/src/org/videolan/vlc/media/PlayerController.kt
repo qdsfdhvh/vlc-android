@@ -137,8 +137,9 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
     fun restart() {
         val mp = mediaplayer
         mediaplayer = newMediaPlayer()
+        val engine = danmaEngine
         danmaEngine = DanmakuEngine(entryPoint.danmaOptions)
-        release(mp)
+        release(mp, engine)
     }
 
     fun seek(position: Long, length: Double = getLength().toDouble()) {
@@ -226,9 +227,9 @@ class PlayerController(val context: Context) : IVLCVout.Callback, MediaPlayer.Ev
         hasRenderer = renderer !== null
     }
 
-    fun release(player: MediaPlayer = mediaplayer) {
+    fun release(player: MediaPlayer = mediaplayer, engine: IDanmakuEngine = danmaEngine) {
         danmaJob?.cancel()
-        danmaEngine.release()
+        engine.release()
         player.setEventListener(null)
         if (isVideoPlaying()) player.vlcVout.detachViews()
         releaseMedia()
